@@ -1,4 +1,3 @@
 export default function Page() {
-    return <h1>Pages!</h1>
+  return <h1>Investor Page!</h1>;
 }
-  
