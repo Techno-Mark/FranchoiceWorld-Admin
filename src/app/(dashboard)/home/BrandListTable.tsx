@@ -33,6 +33,8 @@ import { investorList } from "@/services/endpoint/investorList";
 import { brandListType } from "@/types/apps/brandListType";
 import { brandList } from "@/services/endpoint/brandList";
 import ConfirmationDialog from "./ConfirmationDialog";
+import ConfirmUpdateStatus from "./ConfirmUpdateStatus";
+import ConfirmUpdateApprove from "./ConfirmUpdateApprove";
 // import ConfirmationDialog from "./ConfirmationDialog";
 
 declare module "@tanstack/table-core" {
@@ -104,26 +106,48 @@ const BrandListTable = () => {
   const [deletingId, setDeletingId] = useState<number>(0);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
 
+  const [statusUpdatingId, setStatusUpdatingId] = useState<number>(0);
+  const [isStatusUpdating, setIsStatusUpdating] = useState<boolean>(false);
+  const [approveUpdatingId, setApproveUpdatingId] = useState<number>(0);
+  const [isApproveUpdating, setIsApproveUpdating] = useState<boolean>(false);
+
+  const getData = async () => {
+    setLoading(true);
+    try {
+      const result = await post(brandList.list, {
+        page: page + 1,
+        limit: pageSize,
+        search: globalFilter,
+        active: activeFilter,
+      });
+      setData(result.ResponseData.brands);
+      setTotalRows(result.ResponseData.totalRecords);
+    } catch (error: any) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const getData = async () => {
-      setLoading(true);
-      try {
-        const result = await post(brandList.list, {
-          page: page + 1,
-          limit: pageSize,
-          search: globalFilter,
-          active: activeFilter,
-        });
-        setData(result.ResponseData.brands);
-        setTotalRows(result.ResponseData.totalRecords);
-      } catch (error: any) {
-        setError(error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
     getData();
-  }, [page, pageSize, globalFilter, deletingId, activeFilter]);
+  }, [page, pageSize, globalFilter, activeFilter]);
+
+  useEffect(() => {
+    if (statusUpdatingId == -1) {
+      getData();
+    }
+  }, [statusUpdatingId]);
+  useEffect(() => {
+    if (approveUpdatingId == -1) {
+      getData();
+    }
+  }, [approveUpdatingId]);
+  useEffect(() => {
+    if (deletingId == -1) {
+      getData();
+    }
+  }, [deletingId]);
 
   const columns = useMemo<ColumnDef<BrandTypeWithAction, any>[]>(
     () => [
@@ -181,7 +205,7 @@ const BrandListTable = () => {
         ),
       }),
       columnHelper.accessor("areaaRequired", {
-        header: "areaa",
+        header: "area",
         cell: ({ row }) => (
           <Typography color="text.primary" className="font-medium">
             {row.original.areaaRequired}
@@ -194,11 +218,16 @@ const BrandListTable = () => {
         cell: ({ row }) => (
           <div className="flex items-center">
             <CustomChip
+              className="cursor-pointer"
               size="small"
               round="true"
               label={row.original.active ? "Active" : "Inactive"}
               variant="tonal"
               color={row.original.active ? "success" : "warning"}
+              onClick={() => {
+                setIsStatusUpdating(true);
+                setStatusUpdatingId(row.original.id);
+              }}
             />
           </div>
         ),
@@ -210,11 +239,18 @@ const BrandListTable = () => {
         cell: ({ row }) => (
           <div className="flex items-center">
             <CustomChip
+              className={`${row.original.active ? "cursor-pointer" : "cursor-not-allowed"}`}
               size="small"
               round="true"
               label={row.original.approved ? "Approved" : "Rejected"}
               variant="tonal"
               color={row.original.approved ? "success" : "error"}
+              onClick={() => {
+                if (row.original.active) {
+                  setIsApproveUpdating(true);
+                  setApproveUpdatingId(row.original.id);
+                }
+              }}
             />
           </div>
         ),
@@ -226,9 +262,9 @@ const BrandListTable = () => {
         cell: ({ row }) => (
           <div className="flex items-center">
             <IconButton
-              onClick={() => router.push(`/investor/edit/${row.original.id}`)}
+              onClick={() => router.push(`/home/detail/${row.original.id}`)}
             >
-              <i className="tabler-edit text-[22px] text-textSecondary" />
+              <i className="tabler-external-link text-[22px] text-textSecondary" />
             </IconButton>
             <IconButton
               onClick={() => {
@@ -416,6 +452,22 @@ const BrandListTable = () => {
           setDeletingId={setDeletingId}
           setOpen={(arg1: boolean) => setIsDeleting(arg1)}
         />
+        {isStatusUpdating && (
+          <ConfirmUpdateStatus
+            open={isStatusUpdating}
+            statusUpdatingId={statusUpdatingId}
+            setStatusUpdatingId={setStatusUpdatingId}
+            setOpen={(arg1: boolean) => setIsStatusUpdating(arg1)}
+          />
+        )}
+        {isApproveUpdating && (
+          <ConfirmUpdateApprove
+            open={isApproveUpdating}
+            approveUpdatingId={approveUpdatingId}
+            setApproveUpdatingId={setApproveUpdatingId}
+            setOpen={(arg1: boolean) => setIsApproveUpdating(arg1)}
+          />
+        )}
       </div>
     </>
   );

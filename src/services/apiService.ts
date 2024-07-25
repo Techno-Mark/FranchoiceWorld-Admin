@@ -6,7 +6,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const handleResponse = async (response: Response) => {
   if (!response.ok) {
     console.log(response);
-    
+
     if (response.status === 401) {
       // Unauthorized, log out and redirect to login page
       await signOut({ redirect: true, callbackUrl: "/login" });
@@ -15,7 +15,7 @@ const handleResponse = async (response: Response) => {
       // Unprocessable Entity, handle validation errors
       const errorResponse = await response.json();
       const { message, data } = errorResponse;
-      if (message === "validation error" && data ) {
+      if (message === "validation error" && data) {
         const errors = Object.keys(data).map((key) => `${key}: ${data[key]}`);
         toast.error(errors.join("; "));
         throw new Error("Validation error1");
@@ -26,14 +26,14 @@ const handleResponse = async (response: Response) => {
     } else if (response.status === 400) {
       // Bad Request, handle validation errors
       const errorResponse = await response.json();
-      const { message, data } = errorResponse;
-      if (message === "validation error" && data && typeof data === 'object') {
+      const { Message, data } = errorResponse;
+      if (Message === "validation error" && data && typeof data === "object") {
         const errors = Object.values(data).map((errorMessage) => errorMessage);
         toast.error(errors.join("; "));
         throw new Error("Validation error");
       } else {
-        toast.error(message || "Validation error");
-        throw new Error(message || "Validation error");
+        toast.error(Message || "Validation error");
+        throw new Error(Message || "Validation error");
       }
     } else {
       // Other errors

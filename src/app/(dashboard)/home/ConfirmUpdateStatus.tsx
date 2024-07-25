@@ -10,6 +10,7 @@ import CustomTextField from "@/@core/components/mui/TextField";
 import { MenuItem } from "@mui/material";
 import { useState } from "react";
 import { boolean } from "valibot";
+import { brandList } from "@/services/endpoint/brandList";
 
 type ConfirmationDialogProps = {
   statusUpdatingId: number;
@@ -28,8 +29,8 @@ const ConfirmUpdateStatus = ({
 
   const deleteContentBlock = async () => {
     try {
-      const result = await post(investorList.updateStatus, {
-        investorId: statusUpdatingId,
+      const result = await post(brandList.updateStatus, {
+        brandId: statusUpdatingId,
         status: status,
       });
       if (result.ResponseStatus === "success") {

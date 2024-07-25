@@ -7,5 +7,5 @@ export const brandList = {
   reject: `${prefix}/reject`,
   updateStatus: `${prefix}/update-status`,
   delete: `${prefix}/delete`,
-  get: `${prefix}/get`,
+  getById: `${prefix}/get`,
 };

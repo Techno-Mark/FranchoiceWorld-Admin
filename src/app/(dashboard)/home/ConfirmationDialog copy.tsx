@@ -6,32 +6,27 @@ import Button from "@mui/material/Button";
 import { investorList } from "@/services/endpoint/investorList";
 import { toast } from "react-toastify";
 import { post } from "@/services/apiService";
-import CustomTextField from "@/@core/components/mui/TextField";
-import { MenuItem } from "@mui/material";
-import { useState } from "react";
-import { boolean } from "valibot";
+import { brandList } from "@/services/endpoint/brandList";
 
 type ConfirmationDialogProps = {
-  statusUpdatingId: number;
+  deletingId: number;
   open: boolean;
   setOpen: (open: boolean) => void;
-  setStatusUpdatingId: React.Dispatch<React.SetStateAction<number>>;
+  setDeletingId: React.Dispatch<React.SetStateAction<number>>;
 };
 
-const ConfirmUpdateStatus = ({
-  statusUpdatingId,
+const ConfirmationDialog = ({
+  deletingId,
   open,
   setOpen,
-  setStatusUpdatingId,
+  setDeletingId,
 }: ConfirmationDialogProps) => {
-  const [status, setStatus] = useState("true");
-
   const deleteContentBlock = async () => {
     try {
-      const result = await post(investorList.updateStatus, {
-        investorId: statusUpdatingId,
-        status: status,
+      const result = await post(brandList.delete, {
+        brandId: deletingId,
       });
+      console.log(result);
       if (result.ResponseStatus === "success") {
         toast.success(result.Message);
       } else {
@@ -40,7 +35,7 @@ const ConfirmUpdateStatus = ({
     } catch (error) {
       console.error(error);
     } finally {
-      setStatusUpdatingId(-1);
+      setDeletingId(-1);
       setOpen(false);
     }
   };
@@ -48,19 +43,10 @@ const ConfirmUpdateStatus = ({
   return (
     <Dialog fullWidth maxWidth="xs" open={open} onClose={() => setOpen(false)}>
       <DialogContent className="flex items-center flex-col text-center sm:pbs-16 sm:pbe-6 sm:pli-16">
-        <Typography variant="h5" className="py-4">
-          Are you sure you want to update status?
+        <i className="tabler-alert-circle text-[88px] mbe-6 text-warning" />
+        <Typography variant="h5">
+          Are you sure you want to delete this Brand Detail?
         </Typography>
-        <CustomTextField
-          select
-          defaultValue="true"
-          label=""
-          id="custom-select"
-          onChange={(e) => setStatus(e.target.value)}
-        >
-          <MenuItem value={"true"}>Active</MenuItem>
-          <MenuItem value={"false"}>Inactive</MenuItem>
-        </CustomTextField>
       </DialogContent>
       <DialogActions className="justify-center pbs-0 sm:pbe-16 sm:pli-16">
         <Button variant="contained" onClick={deleteContentBlock}>
@@ -80,4 +66,4 @@ const ConfirmUpdateStatus = ({
   );
 };
 
-export default ConfirmUpdateStatus;
+export default ConfirmationDialog;

@@ -12,26 +12,29 @@ import { useState } from "react";
 import { boolean } from "valibot";
 
 type ConfirmationDialogProps = {
-  statusUpdatingId: number;
+  approveUpdatingId: number;
   open: boolean;
   setOpen: (open: boolean) => void;
-  setStatusUpdatingId: React.Dispatch<React.SetStateAction<number>>;
+  setApproveUpdatingId: React.Dispatch<React.SetStateAction<number>>;
 };
 
-const ConfirmUpdateStatus = ({
-  statusUpdatingId,
+const ConfirmUpdateApprove = ({
+  approveUpdatingId,
   open,
   setOpen,
-  setStatusUpdatingId,
+  setApproveUpdatingId,
 }: ConfirmationDialogProps) => {
   const [status, setStatus] = useState("true");
 
   const deleteContentBlock = async () => {
     try {
-      const result = await post(investorList.updateStatus, {
-        investorId: statusUpdatingId,
-        status: status,
-      });
+      console.log(approveUpdatingId);
+      const result = await post(
+        status === "true" ? investorList.approve : investorList.reject,
+        {
+          investorId: approveUpdatingId,
+        }
+      );
       if (result.ResponseStatus === "success") {
         toast.success(result.Message);
       } else {
@@ -40,7 +43,7 @@ const ConfirmUpdateStatus = ({
     } catch (error) {
       console.error(error);
     } finally {
-      setStatusUpdatingId(-1);
+      setApproveUpdatingId(-1);
       setOpen(false);
     }
   };
@@ -49,7 +52,7 @@ const ConfirmUpdateStatus = ({
     <Dialog fullWidth maxWidth="xs" open={open} onClose={() => setOpen(false)}>
       <DialogContent className="flex items-center flex-col text-center sm:pbs-16 sm:pbe-6 sm:pli-16">
         <Typography variant="h5" className="py-4">
-          Are you sure you want to update status?
+          Are you sure you want to update Approval Status?
         </Typography>
         <CustomTextField
           select
@@ -58,8 +61,8 @@ const ConfirmUpdateStatus = ({
           id="custom-select"
           onChange={(e) => setStatus(e.target.value)}
         >
-          <MenuItem value={"true"}>Active</MenuItem>
-          <MenuItem value={"false"}>Inactive</MenuItem>
+          <MenuItem value={"true"}>Approve</MenuItem>
+          <MenuItem value={"false"}>Reject</MenuItem>
         </CustomTextField>
       </DialogContent>
       <DialogActions className="justify-center pbs-0 sm:pbe-16 sm:pli-16">
@@ -80,4 +83,4 @@ const ConfirmUpdateStatus = ({
   );
 };
 
-export default ConfirmUpdateStatus;
+export default ConfirmUpdateApprove;
