@@ -1,8 +1,8 @@
-import { authOptions } from "@/libs/auth";
-import { getServerSession } from "next-auth";
-import { redirect } from "next/navigation";
+import React from "react";
+import BrandListTable from "./BrandListTable";
 
-export default async function Page() {
- 
-  return <h1>Home page!</h1>
-}
+const page = () => {
+  return <BrandListTable />;
+};
+
+export default page;
