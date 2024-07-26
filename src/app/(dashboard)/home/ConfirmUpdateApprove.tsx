@@ -33,7 +33,7 @@ const ConfirmUpdateApprove = ({
       const result = await post(
         status === "true" ? brandList.approve : brandList.reject,
         {
-          bandId: approveUpdatingId,
+          brandId: approveUpdatingId,
         }
       );
       if (result.ResponseStatus === "success") {

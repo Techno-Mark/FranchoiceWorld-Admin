@@ -20,7 +20,6 @@ type pageProps = {
 };
 
 function BrandDetail({ brandDetails: data }: pageProps) {
-  console.log(data);
   return (
     <Grid container spacing={6} alignItems={"flex-start"}>
       <Grid
@@ -320,12 +319,12 @@ function BrandDetail({ brandDetails: data }: pageProps) {
         <Card className="p-2">
           <Typography variant="h5" className="underline">
             {" "}
-            User Details:{" "}
+            Brand Images:{" "}
           </Typography>
 
           <div className="p-2 flex flex-col space-y-2 my-2">
             <div className="flex items-center space-x-2">
-              <Typography variant="h6" className="w-32">
+              <Typography variant="h5" className="w-32">
                 {" "}
                 Brochure Link:{" "}
               </Typography>
@@ -334,6 +333,7 @@ function BrandDetail({ brandDetails: data }: pageProps) {
                 <Link
                   href={`${process.env.NEXT_PUBLIC_BASE_API_URL}/${data.brochure}`}
                   target="_blank"
+                  className="underline text-blue-500"
                 >
                   {" "}
                   Brochure Link{" "}
@@ -341,14 +341,48 @@ function BrandDetail({ brandDetails: data }: pageProps) {
               </Typography>
             </div>
           </div>
-          <div>
-            <Typography variant="h5"> Logo:</Typography>
-            <img
-              src={`${process.env.NEXT_PUBLIC_BASE_API_URL}/${data.logo}`}
-              width={"350px"}
-              height={"350px"}
-              className="object-cover"
-            />
+          <div className="flex gap-x-10">
+            <div className="">
+              <Typography variant="h5"> Logo:</Typography>
+              {data.logo && (
+                <img
+                  src={`${process.env.NEXT_PUBLIC_BASE_API_URL}/${data.logo}`}
+                  width={"300px"}
+                  height={"300px"}
+                  className="object-cover border"
+                />
+              )}
+            </div>
+            <div>
+              {" "}
+              <Typography variant="h5"> Video:</Typography>
+              {data.video && (
+                <video width="300" height="300" controls className="border">
+                  <source
+                    src={`${process.env.NEXT_PUBLIC_BASE_API_URL}/${data.video}`}
+                  />
+                  Your browser does not support the video tag.
+                </video>
+              )}
+            </div>
+          </div>
+          <div className="my-8 p-8">
+            <Typography variant="h6" className="w-32">
+              {" "}
+              brand Resource:{" "}
+            </Typography>
+            <div className="flex gap-x-12 flex-wrap gap-y-6">
+              {data.brandImages.map((path: string) => {
+                return (
+                  <img
+                    src={`${process.env.NEXT_PUBLIC_BASE_API_URL}/${path}`}
+                    width={"450px"}
+                    height={"300px"}
+                    className="object-cover border p-2"
+                  />
+                );
+              })}
+            </div>
           </div>
         </Card>
       </Grid>
