@@ -318,7 +318,13 @@ const InvestorListTable = () => {
       <div className="max-h-[75vh]">
         <LoadingBackdrop isLoading={loading} />
         <div className="flex justify-between flex-col items-start md:flex-row md:items-center py-2 gap-4">
-          <BreadCrumbList />
+          <div className="h-10 flex items-center">
+            <div>
+              <Typography variant="h5" className={`capitalize cursor-pointer`}>
+                &nbsp; Investor List &nbsp;
+              </Typography>
+            </div>
+          </div>
           <div className="flex flex-col sm:flex-row is-full sm:is-auto items-start sm:items-center gap-4">
             <DebouncedInput
               value={globalFilter ?? ""}
