@@ -511,7 +511,7 @@ function BrandDetail({ brandDetails: data }: pageProps) {
                   {" "}
                   <Typography variant="h6"> Brand Images: </Typography>
                 </td>
-                <td className="flex gap-x-8 gap-y-4 flex-wrap">
+                <td className="flex gap-x-2 gap-y-4 flex-wrap">
                   {data.brandImages?.length &&
                   Array.isArray(data.brandImages) &&
                   data.brandImages.length > 0
