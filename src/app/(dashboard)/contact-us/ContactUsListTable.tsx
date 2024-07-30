@@ -330,7 +330,7 @@ const ContactUsListTable = () => {
           </div> */}
         </div>
         <Card className="flex flex-col h-full">
-          <div className="overflow-x-auto h-[500px]">
+          <div className="overflow-x-auto sm:h-[380px] md:h-[400px] lg:h-[475px]">
             <table className={tableStyles.table}>
               <thead className="">
                 {table.getHeaderGroups().map((headerGroup) => (

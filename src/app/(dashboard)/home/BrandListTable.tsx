@@ -375,7 +375,7 @@ const BrandListTable = () => {
           </div>
         </div>
         <Card className="flex flex-col h-full">
-          <div className="overflow-x-auto h-[490px]">
+          <div className="overflow-x-auto sm:h-[380px] md:h-[400px] lg:h-[460px]">
             <table className={tableStyles.table}>
               <thead className="">
                 {table.getHeaderGroups().map((headerGroup) => (
