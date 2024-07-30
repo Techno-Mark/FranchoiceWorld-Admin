@@ -17,6 +17,7 @@ type ConfirmationDialogProps = {
   open: boolean;
   setOpen: (open: boolean) => void;
   setStatusUpdatingId: React.Dispatch<React.SetStateAction<number>>;
+  statusValue: boolean;
 };
 
 const ConfirmUpdateStatus = ({
@@ -24,14 +25,13 @@ const ConfirmUpdateStatus = ({
   open,
   setOpen,
   setStatusUpdatingId,
+  statusValue,
 }: ConfirmationDialogProps) => {
-  const [status, setStatus] = useState("true");
-
   const deleteContentBlock = async () => {
     try {
       const result = await post(brandList.updateStatus, {
         brandId: statusUpdatingId,
-        status: status,
+        status: !statusValue,
       });
       if (result.ResponseStatus === "success") {
         toast.success(result.Message);
@@ -50,18 +50,9 @@ const ConfirmUpdateStatus = ({
     <Dialog fullWidth maxWidth="xs" open={open} onClose={() => setOpen(false)}>
       <DialogContent className="flex items-center flex-col text-center sm:pbs-16 sm:pbe-6 sm:pli-16">
         <Typography variant="h5" className="py-4">
-          Are you sure you want to update status?
+          Are you sure you want to update{" "}
+          {`${statusValue ? "Active" : "Inactive"}`} status?
         </Typography>
-        <CustomTextField
-          select
-          defaultValue="true"
-          label=""
-          id="custom-select"
-          onChange={(e) => setStatus(e.target.value)}
-        >
-          <MenuItem value={"true"}>Active</MenuItem>
-          <MenuItem value={"false"}>Inactive</MenuItem>
-        </CustomTextField>
       </DialogContent>
       <DialogActions className="justify-center pbs-0 sm:pbe-16 sm:pli-16">
         <Button variant="contained" onClick={deleteContentBlock}>

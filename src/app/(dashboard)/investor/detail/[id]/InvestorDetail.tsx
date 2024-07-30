@@ -42,14 +42,14 @@ function InvestorDetail({ investorDetail: data }: pageProps) {
                   {" "}
                   Full Name:{" "}
                 </Typography>
-                <Typography>{data.fullName} </Typography>
+                <Typography>{data.fullName || "NA"} </Typography>
               </div>
               <div className="flex items-center space-x-2">
                 <Typography variant="h6" className="w-32">
                   {" "}
                   Email:{" "}
                 </Typography>
-                <Typography>{data.email} </Typography>
+                <Typography>{data.email || "NA"} </Typography>
               </div>
               <div className="flex items-center space-x-2">
                 <Typography variant="h6" className="w-32">
@@ -63,44 +63,60 @@ function InvestorDetail({ investorDetail: data }: pageProps) {
               <div className="flex items-center space-x-2">
                 <Typography variant="h6" className="w-32">
                   {" "}
-                  address:{" "}
+                  Address:{" "}
                 </Typography>
-                <Typography>{data.address} </Typography>
+                <Typography>{data.address || "NA"} </Typography>
               </div>
               <div className="flex items-center space-x-2">
                 <Typography variant="h6" className="w-32">
                   {" "}
-                  state:{" "}
+                  State:{" "}
                 </Typography>
-                <Typography>{data.state} </Typography>
+                <Typography>{data.stateAssociation?.name || "NA"} </Typography>
               </div>
               <div className="flex items-center space-x-2">
                 <Typography variant="h6" className="w-32">
                   {" "}
-                  city:{" "}
+                  City:{" "}
                 </Typography>
-                <Typography>{data.city} </Typography>
+                <Typography>{data.cityAssociation?.name || "NA"} </Typography>
               </div>
               <div className="flex items-center space-x-2">
                 <Typography variant="h6" className="w-32">
                   {" "}
-                  pincode:{" "}
+                  Pincode:{" "}
                 </Typography>
-                <Typography>{data.pincode} </Typography>
+                <Typography>{data.pincode || "NA"} </Typography>
               </div>
               <div className="flex items-center space-x-2">
                 <Typography variant="h6" className="w-32">
                   {" "}
                   Education Qualification:{" "}
                 </Typography>
-                <Typography>{data.educationQualification} </Typography>
+                <Typography>
+                  {data.educationQualificationAssociation?.name || "NA"}{" "}
+                </Typography>
               </div>
               <div className="flex items-center space-x-2">
                 <Typography variant="h6" className="w-32">
                   {" "}
-                  occupation:{" "}
+                  Occupation:{" "}
                 </Typography>
-                <Typography>{data.occupation} </Typography>
+                <Typography>{data.occupationAssociation?.name} </Typography>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Typography variant="h6" className="w-32">
+                  {" "}
+                  Accept Terms:{" "}
+                </Typography>
+                <Typography>{data.acceptTerms?.toString() || "NA"} </Typography>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Typography variant="h6" className="w-32">
+                  {" "}
+                  Submit Info:{" "}
+                </Typography>
+                <Typography>{data.submitInfo?.toString() || "NA"} </Typography>
               </div>
             </div>
           </Card>
@@ -115,49 +131,83 @@ function InvestorDetail({ investorDetail: data }: pageProps) {
               <tr>
                 <td>
                   <Typography variant="h6" className="w-40">
-                    industry Type:{" "}
+                    Industry Type:{" "}
                   </Typography>
                 </td>
                 <td>
-                  <Typography>{data.industryType} </Typography>
+                  <Typography>
+                    {data.industryAssociation?.name || "NA"}{" "}
+                  </Typography>
                 </td>
               </tr>
               <tr>
                 <td>
-                  <Typography variant="h6"> needForLoan: </Typography>
+                  <Typography variant="h6" className="w-40">
+                    Investment Range:{" "}
+                  </Typography>
                 </td>
                 <td>
-                  <Typography>{data.needForLoan?.toString()}</Typography>
+                  <Typography>
+                    {data.investmentRangeAssociation?.range || "NA"}{" "}
+                  </Typography>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <Typography variant="h6" className="w-40">
+                    Available Capital:{" "}
+                  </Typography>
+                </td>
+                <td>
+                  <Typography>
+                    {data.availableCapital?.name || "NA"}{" "}
+                  </Typography>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <Typography variant="h6"> Need for Loan: </Typography>
+                </td>
+                <td>
+                  <Typography>
+                    {data.needForLoan?.toString() || "NA"}
+                  </Typography>
                 </td>
               </tr>
               <tr>
                 <td>
                   <Typography variant="h6" className="w-40">
                     {" "}
-                    likeToInvest:{" "}
+                    Like to Invest:{" "}
                   </Typography>
                 </td>
                 <td>
-                  <Typography>{data.likeToInvest}</Typography>
+                  <Typography>
+                    {data.likeToInvestAssociation?.name || "NA"}
+                  </Typography>
                 </td>
               </tr>
               <tr>
                 <td>
                   <Typography variant="h6" className="w-40">
                     {" "}
-                    lookingFor:{" "}
+                    Looking For:{" "}
                   </Typography>
                 </td>
                 <td>
-                  <Typography>{data.lookingFor} </Typography>
+                  <Typography>
+                    {data.lookingForAssociation?.name || "NA"}{" "}
+                  </Typography>
                 </td>
               </tr>
               <tr>
                 <td>
-                  <Typography variant="h6"> ownProperty: </Typography>
+                  <Typography variant="h6"> Own Property: </Typography>
                 </td>
                 <td>
-                  <Typography>{data.ownProperty?.toString()}</Typography>
+                  <Typography>
+                    {data.ownProperty?.toString() || "NA"}
+                  </Typography>
                 </td>
               </tr>
             </table>
@@ -176,28 +226,34 @@ function InvestorDetail({ investorDetail: data }: pageProps) {
           <Card className="p-2">
             <Typography variant="h5" className="underline">
               {" "}
-              looking for State:{" "}
+              Looking for State:{" "}
             </Typography>
             {data.lookingForState?.length &&
-              data.lookingForState?.map((name: string) => (
-                <ListItem>
-                  <ListItemText primary={`${name}`} />
-                </ListItem>
-              ))}
+            Array.isArray(data.lookingForState) &&
+            data.lookingForState.length > 0
+              ? data.lookingForState.map((name: string) => (
+                  <ListItem>
+                    <ListItemText primary={`${name}`} />
+                  </ListItem>
+                ))
+              : "NA"}
           </Card>
         </Grid>
         <Grid item xs={12} sm={10}>
           <Card className="p-2">
             <Typography variant="h5" className="underline">
               {" "}
-              looking for city:{" "}
+              Looking for City:{" "}
             </Typography>
             {data.lookingForCity?.length &&
-              data.lookingForCity?.map((name: string) => (
-                <ListItem>
-                  <ListItemText primary={`${name}`} />
-                </ListItem>
-              ))}
+            Array.isArray(data.lookingForCity) &&
+            data.lookingForCity.length > 0
+              ? data.lookingForCity?.map((name: string) => (
+                  <ListItem>
+                    <ListItemText primary={`${name}`} />
+                  </ListItem>
+                ))
+              : "NA"}
           </Card>
         </Grid>
       </Grid>
