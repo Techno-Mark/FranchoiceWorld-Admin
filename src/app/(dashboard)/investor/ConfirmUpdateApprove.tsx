@@ -16,6 +16,7 @@ type ConfirmationDialogProps = {
   open: boolean;
   setOpen: (open: boolean) => void;
   setApproveUpdatingId: React.Dispatch<React.SetStateAction<number>>;
+  statusValue: boolean;
 };
 
 const ConfirmUpdateApprove = ({
@@ -23,14 +24,13 @@ const ConfirmUpdateApprove = ({
   open,
   setOpen,
   setApproveUpdatingId,
+  statusValue,
 }: ConfirmationDialogProps) => {
-  const [status, setStatus] = useState("true");
-
   const deleteContentBlock = async () => {
     try {
       console.log(approveUpdatingId);
       const result = await post(
-        status === "true" ? investorList.approve : investorList.reject,
+        !statusValue ? investorList.approve : investorList.reject,
         {
           investorId: approveUpdatingId,
         }
@@ -52,18 +52,9 @@ const ConfirmUpdateApprove = ({
     <Dialog fullWidth maxWidth="xs" open={open} onClose={() => setOpen(false)}>
       <DialogContent className="flex items-center flex-col text-center sm:pbs-16 sm:pbe-6 sm:pli-16">
         <Typography variant="h5" className="py-4">
-          Are you sure you want to update Approval Status?
+          Are you sure you want to update Approval{" "}
+          {`${statusValue ? "Approved" : "Rejected"}`} Status?
         </Typography>
-        <CustomTextField
-          select
-          defaultValue="true"
-          label=""
-          id="custom-select"
-          onChange={(e) => setStatus(e.target.value)}
-        >
-          <MenuItem value={"true"}>Approve</MenuItem>
-          <MenuItem value={"false"}>Reject</MenuItem>
-        </CustomTextField>
       </DialogContent>
       <DialogActions className="justify-center pbs-0 sm:pbe-16 sm:pli-16">
         <Button variant="contained" onClick={deleteContentBlock}>

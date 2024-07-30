@@ -108,6 +108,7 @@ const InvestorListTable = () => {
   const [isStatusUpdating, setIsStatusUpdating] = useState<boolean>(false);
   const [approveUpdatingId, setApproveUpdatingId] = useState<number>(0);
   const [isApproveUpdating, setIsApproveUpdating] = useState<boolean>(false);
+  const [changeStatusValue, setChangeStatusValue] = useState(false);
 
   const getData = async () => {
     setLoading(true);
@@ -216,15 +217,18 @@ const InvestorListTable = () => {
         cell: ({ row }) => (
           <div className="flex items-center">
             <CustomChip
-              className="cursor-pointer"
+              className={`${row.original.approved ? "cursor-pointer" : "cursor-not-allowed"}`}
               size="small"
               round="true"
               label={row.original.active ? "Active" : "Inactive"}
               variant="tonal"
               color={row.original.active ? "success" : "warning"}
               onClick={() => {
-                setIsStatusUpdating(true);
-                setStatusUpdatingId(row.original.id);
+                if (row.original.approved) {
+                  setChangeStatusValue(row.original.active);
+                  setIsStatusUpdating(true);
+                  setStatusUpdatingId(row.original.id);
+                }
               }}
             />
           </div>
@@ -237,17 +241,16 @@ const InvestorListTable = () => {
         cell: ({ row }) => (
           <div className="flex items-center">
             <CustomChip
-              className={`${row.original.active ? "cursor-pointer" : "cursor-not-allowed"}`}
+              className="cursor-pointer"
               size="small"
               round="true"
               label={row.original.approved ? "Approved" : "Rejected"}
               variant="tonal"
               color={row.original.approved ? "success" : "error"}
               onClick={() => {
-                if (row.original.active) {
-                  setIsApproveUpdating(true);
-                  setApproveUpdatingId(row.original.id);
-                }
+                setChangeStatusValue(row.original.approved);
+                setIsApproveUpdating(true);
+                setApproveUpdatingId(row.original.id);
               }}
             />
           </div>
@@ -458,6 +461,7 @@ const InvestorListTable = () => {
         />
         {isStatusUpdating && (
           <ConfirmUpdateStatus
+            statusValue={changeStatusValue}
             open={isStatusUpdating}
             statusUpdatingId={statusUpdatingId}
             setStatusUpdatingId={setStatusUpdatingId}
@@ -466,6 +470,7 @@ const InvestorListTable = () => {
         )}
         {isApproveUpdating && (
           <ConfirmUpdateApprove
+            statusValue={changeStatusValue}
             open={isApproveUpdating}
             approveUpdatingId={approveUpdatingId}
             setApproveUpdatingId={setApproveUpdatingId}
