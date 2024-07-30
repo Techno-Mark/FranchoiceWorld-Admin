@@ -1,4 +1,8 @@
-export default function Page() {
-    return <h1>Contact Us page!</h1>
-  }
-  
+import React from "react";
+import ContactUsListTable from "./ContactUsListTable";
+
+const page = () => {
+  return <ContactUsListTable />;
+};
+
+export default page;
