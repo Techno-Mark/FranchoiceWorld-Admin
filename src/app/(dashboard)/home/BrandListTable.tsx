@@ -270,6 +270,11 @@ const BrandListTable = () => {
               <i className="tabler-external-link text-[22px] text-textSecondary" />
             </IconButton>
             <IconButton
+              onClick={() => router.push(`/home/edit/${row.original.id}`)}
+            >
+              <i className="tabler-edit text-[22px] text-textSecondary" />
+            </IconButton>
+            <IconButton
               onClick={() => {
                 setIsDeleting(true);
                 setDeletingId(row.original.id);
