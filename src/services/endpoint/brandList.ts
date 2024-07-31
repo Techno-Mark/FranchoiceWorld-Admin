@@ -8,4 +8,5 @@ export const brandList = {
   updateStatus: `${prefix}/update-status`,
   delete: `${prefix}/delete`,
   getById: `${prefix}/get`,
+  getEditDataById: `${prefix}/getById`,
 };
