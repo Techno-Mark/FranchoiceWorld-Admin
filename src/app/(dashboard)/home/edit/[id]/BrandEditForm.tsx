@@ -1,7 +1,20 @@
 import CustomTextField from "@/@core/components/mui/TextField";
 import LoadingBackdrop from "@/components/LoadingBackdrop";
 import { BrandEditDataType } from "@/types/apps/brandListType";
-import { Box, Button, Card, Grid, MenuItem, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  Card,
+  Checkbox,
+  FormControlLabel,
+  Grid,
+  ListItemText,
+  MenuItem,
+  Radio,
+  RadioGroup,
+  SelectChangeEvent,
+  Typography,
+} from "@mui/material";
 import React, { ChangeEvent, useEffect, useState } from "react";
 import {
   fetchAreaRequired,
@@ -20,10 +33,18 @@ import {
   fetchSupportProvided,
 } from "./dropdownAPIService";
 import AppReactDatepicker from "@/libs/styles/AppReactDatepicker";
-import CustomAutocomplete from "@/@core/components/mui/Autocomplete";
-import { brandList } from "@/services/endpoint/brandList";
-import { post } from "@/services/apiService";
-import { toast } from "react-toastify";
+import CustomChip from "@/@core/components/mui/Chip";
+
+const ITEM_HEIGHT = 50;
+const ITEM_PADDING_TOP = 4;
+const MenuProps = {
+  PaperProps: {
+    style: {
+      width: 250,
+      maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
+    },
+  },
+};
 
 type pageProps = {
   editData: BrandEditDataType;
@@ -94,6 +115,7 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
   const [country, setCountry] = useState<dropdownValueType>();
   const [state, setState] = useState<dropdownValueType>();
   const [city, setCity] = useState<dropdownValueType>();
+  const [allCity, setAllCity] = useState<dropdownValueType>();
   const [industry, setIndustry] = useState<dropdownValueType>();
   const [subCategory, setSubCategory] = useState<dropdownValueType>();
   const [service, setService] = useState<dropdownValueType>();
@@ -107,13 +129,6 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
   const [supportProvided, setSupportProvided] = useState<dropdownValueType>();
   const [franchiseDuration, setFranchiseDuration] =
     useState<dropdownValueType>();
-
-  //Functions
-  async function fetchCity() {
-    let data = await fetchCities([formData.userState]);
-    setCity(data);
-    setFormData({ ...formData, userCity: -1 });
-  }
 
   //Hooks
   useEffect(() => {
@@ -135,6 +150,7 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
         paybackPeriods,
         supportProvided,
         durations,
+        allCity,
       ] = await Promise.all([
         fetchCountries(),
         fetchStates(),
@@ -150,6 +166,7 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
         fetchPaybackPeriod(),
         fetchSupportProvided(),
         fetchFranchiseDuration(),
+        fetchCities([]),
       ]);
       setCountry(countries);
       setState(states);
@@ -165,30 +182,41 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
       setPaybackPeriod(paybackPeriods);
       setSupportProvided(supportProvided);
       setFranchiseDuration(durations);
+      setAllCity(allCity);
       setLoading(false);
     }
+    async function fakeMethod() {
+      let data = await fetchStates();
+      setState(data);
+    }
+    // fakeMethod();
     getData();
   }, []);
 
+  const checkFormIsValid = (formErrors: any): boolean => {
+    return !Object.keys(formErrors).some((key) => formErrors[key]);
+  };
+
   const handleSubmit = async () => {
-    if (true) {
+    if (checkFormIsValid(formErrors)) {
       // add validation method
       try {
-        setLoading(true);
-        const endpoint = brandList.edit;
+        console.log("form data", formData);
+        // setLoading(true);
+        // const endpoint = brandList.edit;
 
-        const payload = {
-          ...formData,
-        };
+        // const payload = {
+        //   ...formData,
+        // };
 
-        const response = await post(endpoint, payload);
+        // const response = await post(endpoint, payload);
 
-        if (response.ResponseStatus === "success") {
-          toast.success(response.Message);
-        } else {
-          toast.error(response.Message);
-        }
-        setLoading(false);
+        // if (response.ResponseStatus === "success") {
+        //   toast.success(response.Message);
+        // } else {
+        //   toast.error(response.Message);
+        // }
+        // setLoading(false);
       } catch (error: any) {
         console.error("Error fetching data:", error.message);
         setLoading(false);
@@ -217,8 +245,8 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
               User Details:{" "}
             </Typography>
 
-            <Grid container spacing={2} className="mt-2">
-              <Grid item xs={12} sm={6} className="mt-2">
+            <Grid container spacing={2} className="mt-5">
+              <Grid item xs={12} sm={6}>
                 <CustomTextField
                   error={!!formErrors?.fullName}
                   helperText={formErrors?.fullName}
@@ -243,7 +271,7 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
                   }}
                 />
               </Grid>
-              <Grid item xs={12} sm={6} className="mt-2">
+              <Grid item xs={12} sm={6}>
                 <CustomTextField
                   disabled={true}
                   error={!!formErrors?.phoneNumber}
@@ -259,7 +287,7 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
                 />
               </Grid>
             </Grid>
-            <Grid item xs={12} sm={12} className="mt-2">
+            <Grid item xs={12} sm={12} className="mt-4">
               <CustomTextField
                 error={!!formErrors?.email}
                 helperText={formErrors?.email}
@@ -290,7 +318,7 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
                 }}
               />
             </Grid>
-            <Grid item xs={12} sm={12} className="mt-2">
+            <Grid item xs={12} sm={12} className="mt-4">
               <CustomTextField
                 error={!!formErrors?.brandName}
                 helperText={formErrors?.brandName}
@@ -316,7 +344,7 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
                 }}
               />
             </Grid>
-            <Grid item xs={12} sm={12} className="mt-2">
+            <Grid item xs={12} sm={12} className="mt-4">
               <CustomTextField
                 error={!!formErrors?.websiteURL}
                 helperText={formErrors?.websiteURL}
@@ -329,14 +357,14 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
                 }
               />
             </Grid>
-            <Grid container spacing={2} className="mt-2">
-              <Grid item xs={12} sm={6} className="mt-2">
+            <Grid container columnSpacing={2} className="mt-4">
+              <Grid item xs={12} sm={6}>
                 <CustomTextField
                   error={!!formErrors?.country}
                   helperText={formErrors?.country}
                   select
                   fullWidth
-                  defaultValue=""
+                  defaultValue="0"
                   value={formData.country}
                   label="Select Country *"
                   id="custom-select"
@@ -346,7 +374,7 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
                       ...formData,
                       country: Number(e.target.value),
                     });
-                    if (val === -1) {
+                    if (val === 0) {
                       setFormErrors({
                         ...formErrors,
                         country: "Please Select Country",
@@ -359,7 +387,7 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
                     }
                   }}
                 >
-                  <MenuItem value={-1}>
+                  <MenuItem value={0}>
                     <em>Select Country</em>
                   </MenuItem>
                   {!loading &&
@@ -371,23 +399,23 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
                     ))}
                 </CustomTextField>
               </Grid>
-              <Grid item xs={12} sm={6} className="mt-2">
+              <Grid item xs={12} sm={6}>
                 <CustomTextField
                   error={!!formErrors?.userState}
                   helperText={formErrors?.userState}
                   select
                   fullWidth
-                  defaultValue="-1"
+                  defaultValue="0"
                   value={formData.userState}
                   label="Select State *"
                   id="custom-select"
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                  onChange={async (e: ChangeEvent<HTMLInputElement>) => {
                     let val = Number(e.target.value);
                     setFormData({
                       ...formData,
                       userState: val,
                     });
-                    if (val === -1) {
+                    if (val === 0) {
                       setFormErrors({
                         ...formErrors,
                         userState: "Please Select State",
@@ -398,10 +426,15 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
                         userState: "",
                       });
                     }
-                    // fetchCity();
+                    let data = await fetchCities([val]);
+                    setCity(data);
+                    setFormData((prevState) => ({
+                      ...prevState,
+                      userCity: 0,
+                    }));
                   }}
                 >
-                  <MenuItem value={-1}>
+                  <MenuItem value={0}>
                     <em>Select State</em>
                   </MenuItem>
                   {!loading &&
@@ -413,13 +446,15 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
                     ))}
                 </CustomTextField>
               </Grid>
-              <Grid item xs={12} sm={6} className="mt-2">
+            </Grid>
+            <Grid container columnSpacing={2} className="mt-4">
+              <Grid item xs={12} sm={6}>
                 <CustomTextField
                   error={!!formErrors?.userCity}
                   helperText={formErrors?.userCity}
                   select
                   fullWidth
-                  defaultValue="-1"
+                  defaultValue="0"
                   value={formData.userCity}
                   label="Select City *"
                   id="custom-select"
@@ -429,7 +464,7 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
                       ...formData,
                       userCity: val,
                     });
-                    if (val === -1) {
+                    if (val === 0) {
                       setFormErrors({
                         ...formErrors,
                         userCity: "Please Select City",
@@ -442,7 +477,7 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
                     }
                   }}
                 >
-                  <MenuItem value={-1}>
+                  <MenuItem value={"0"}>
                     <em>Select City</em>
                   </MenuItem>
                   {!loading &&
@@ -454,7 +489,7 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
                     ))}
                 </CustomTextField>
               </Grid>
-              <Grid item xs={12} sm={6} className="mt-2">
+              <Grid item xs={12} sm={6}>
                 <CustomTextField
                   error={!!formErrors?.pincode}
                   helperText={formErrors?.pincode}
@@ -486,8 +521,8 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
                 />
               </Grid>
             </Grid>
-            <Grid container spacing={2} className="mt-2">
-              <Grid item xs={12} sm={6} className="mt-2">
+            <Grid container spacing={2} className="mt-4">
+              <Grid item xs={12} sm={6}>
                 {/* <CustomAutocomplete
                   fullWidth
                   options={state}
@@ -514,7 +549,7 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
               Brand Details:{" "}
             </Typography>
 
-            <Grid item xs={12} sm={12} className="mt-2">
+            <Grid item xs={12} sm={12} className="mt-5">
               <CustomTextField
                 error={!!formErrors?.companyName}
                 helperText={formErrors?.companyName}
@@ -527,8 +562,107 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
                 }
               />
             </Grid>
-            <Grid container spacing={2} className="mt-2">
-              <Grid item xs={12} sm={6} className="mt-2">
+            <Grid container columnSpacing={2} className="mt-4">
+              <Grid item xs={12} sm={4}>
+                <CustomTextField
+                  error={!!formErrors?.industry}
+                  helperText={formErrors?.industry}
+                  select
+                  fullWidth
+                  defaultValue="0"
+                  value={formData.industry}
+                  label="Industry  "
+                  id="custom-select"
+                  onChange={async (e: ChangeEvent<HTMLInputElement>) => {
+                    let val = Number(e.target.value);
+                    setFormData({
+                      ...formData,
+                      industry: Number(e.target.value),
+                      subCategory: 0,
+                      service: 0,
+                    });
+                    let data = await fetchSubCategory(val);
+                    setSubCategory(data);
+                  }}
+                >
+                  <MenuItem value={0}>
+                    <em>Select industry</em>
+                  </MenuItem>
+                  {!loading &&
+                    !!industry?.length &&
+                    industry.map((c) => (
+                      <MenuItem value={c.id} key={c.name}>
+                        {c.name}
+                      </MenuItem>
+                    ))}
+                </CustomTextField>
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <CustomTextField
+                  error={!!formErrors?.subCategory}
+                  helperText={formErrors?.subCategory}
+                  select
+                  fullWidth
+                  defaultValue="0"
+                  value={formData.subCategory}
+                  label="Sub-Category  "
+                  id="custom-select"
+                  onChange={async (e: ChangeEvent<HTMLInputElement>) => {
+                    let val = Number(e.target.value);
+                    setFormData({
+                      ...formData,
+                      subCategory: Number(e.target.value),
+                      service: 0,
+                    });
+                    let data = await fetchService(val);
+                    setService(data);
+                  }}
+                >
+                  <MenuItem value={0}>
+                    <em>Select Sub-Category</em>
+                  </MenuItem>
+                  {!loading &&
+                    !!subCategory?.length &&
+                    subCategory.map((c) => (
+                      <MenuItem value={c.id} key={c.name}>
+                        {c.name}
+                      </MenuItem>
+                    ))}
+                </CustomTextField>
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <CustomTextField
+                  error={!!formErrors?.service}
+                  helperText={formErrors?.service}
+                  select
+                  fullWidth
+                  defaultValue="0"
+                  value={formData.service}
+                  label="Service/Product  "
+                  id="custom-select"
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                    let val = Number(e.target.value);
+                    setFormData({
+                      ...formData,
+                      service: Number(e.target.value),
+                    });
+                  }}
+                >
+                  <MenuItem value={0}>
+                    <em>Select industry</em>
+                  </MenuItem>
+                  {!loading &&
+                    !!service?.length &&
+                    service.map((c) => (
+                      <MenuItem value={c.id} key={c.name}>
+                        {c.name}
+                      </MenuItem>
+                    ))}
+                </CustomTextField>
+              </Grid>
+            </Grid>
+            <Grid container columnSpacing={2} className="mt-4">
+              <Grid item xs={12} sm={6}>
                 <AppReactDatepicker
                   showYearPicker
                   dateFormat="yyyy"
@@ -546,7 +680,7 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
                   }
                 />
               </Grid>
-              <Grid item xs={12} sm={6} className="mt-2">
+              <Grid item xs={12} sm={6}>
                 <AppReactDatepicker
                   showYearPicker
                   dateFormat="yyyy"
@@ -562,10 +696,72 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
                 />
               </Grid>
             </Grid>
-            <Grid item xs={12} sm={12} className="mt-2">
+            <Grid container columnSpacing={2} className="mt-4">
+              <Grid item xs={12} sm={6}>
+                <CustomTextField
+                  error={!!formErrors?.headquartersLocation}
+                  helperText={formErrors?.headquartersLocation}
+                  select
+                  fullWidth
+                  defaultValue="0"
+                  value={formData.headquartersLocation}
+                  label="Location of Headquarters  "
+                  id="custom-select"
+                  onChange={async (e: ChangeEvent<HTMLInputElement>) => {
+                    let val = Number(e.target.value);
+                    setFormData({
+                      ...formData,
+                      headquartersLocation: Number(e.target.value),
+                    });
+                  }}
+                >
+                  <MenuItem value={0}>
+                    <em>Select Headquarters Location</em>
+                  </MenuItem>
+                  {!loading &&
+                    !!headquarter?.length &&
+                    headquarter.map((c) => (
+                      <MenuItem value={c.id} key={c.name}>
+                        {c.name}
+                      </MenuItem>
+                    ))}
+                </CustomTextField>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <CustomTextField
+                  error={!!formErrors?.numberOfLocations}
+                  helperText={formErrors?.numberOfLocations}
+                  select
+                  fullWidth
+                  defaultValue="0"
+                  value={formData.numberOfLocations}
+                  label="Current Number of Locations/Outlets"
+                  id="custom-select"
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                    let val = Number(e.target.value);
+                    setFormData({
+                      ...formData,
+                      numberOfLocations: Number(e.target.value),
+                    });
+                  }}
+                >
+                  <MenuItem value={0}>
+                    <em>Select Number of Locations</em>
+                  </MenuItem>
+                  {!loading &&
+                    !!outlet?.length &&
+                    outlet.map((c) => (
+                      <MenuItem value={c.id} key={c.name}>
+                        {c.name}
+                      </MenuItem>
+                    ))}
+                </CustomTextField>
+              </Grid>
+            </Grid>
+            <Grid item xs={12} sm={12} className="mt-4">
               <CustomTextField
                 multiline
-                maxRows={4}
+                maxRows={10}
                 minRows={4}
                 error={!!formErrors?.brandDescription}
                 helperText={formErrors?.brandDescription}
@@ -578,7 +774,7 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
                 }
               />
             </Grid>
-            <Grid item xs={12} sm={12} className="mt-2">
+            <Grid item xs={12} sm={12} className="mt-4">
               <CustomTextField
                 multiline
                 maxRows={4}
@@ -594,6 +790,98 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
                 }
               />
             </Grid>
+            <Grid item xs={12} sm={12} className="mt-4">
+              <CustomTextField
+                select
+                fullWidth
+                label="States"
+                value={formData.state}
+                id="demo-multiple-checkbox"
+                SelectProps={{
+                  MenuProps,
+                  multiple: true,
+                  onChange: (event: SelectChangeEvent<unknown>) => {
+                    let selectedIds = event.target.value as number[];
+                    setFormData({ ...formData, state: selectedIds });
+                  },
+                  renderValue: (selected) => {
+                    let selectedValue = selected as number[];
+                    const selectedNames =
+                      state &&
+                      state.length &&
+                      state
+                        .filter((item) => selectedValue.includes(item.id))
+                        .map((item) => (
+                          <CustomChip
+                            className="mr-2"
+                            round="true"
+                            label={item.name}
+                            color="primary"
+                          />
+                        ));
+                    return selectedNames;
+                  },
+                }}
+              >
+                {!loading &&
+                  state &&
+                  state?.length &&
+                  state.map((c) => (
+                    <MenuItem key={c.id} value={c.id}>
+                      <Checkbox
+                        checked={formData.state?.includes(c.id) || false}
+                      />
+                      <ListItemText primary={c.name} />
+                    </MenuItem>
+                  ))}
+              </CustomTextField>
+            </Grid>
+            <Grid item xs={12} sm={12} className="mt-4">
+              <CustomTextField
+                select
+                fullWidth
+                label="Cities"
+                value={formData.city}
+                id="demo-multiple-checkbox"
+                SelectProps={{
+                  MenuProps,
+                  multiple: true,
+                  onChange: (event: SelectChangeEvent<unknown>) => {
+                    let selectedIds = event.target.value as number[];
+                    setFormData({ ...formData, city: selectedIds });
+                  },
+                  renderValue: (selected) => {
+                    let selectedValue = selected as number[];
+                    const selectedNames =
+                      allCity &&
+                      allCity.length &&
+                      allCity
+                        .filter((item) => selectedValue.includes(item.id))
+                        .map((item) => (
+                          <CustomChip
+                            className="mr-2"
+                            round="true"
+                            label={item.name}
+                            color="primary"
+                          />
+                        ));
+                    return selectedNames;
+                  },
+                }}
+              >
+                {!loading &&
+                  city &&
+                  city?.length &&
+                  city.map((c) => (
+                    <MenuItem key={c.id} value={c.id}>
+                      <Checkbox
+                        checked={formData.city?.includes(c.id) || false}
+                      />
+                      <ListItemText primary={c.name} />
+                    </MenuItem>
+                  ))}
+              </CustomTextField>
+            </Grid>
           </Card>
         </Grid>
 
@@ -604,19 +892,365 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
               Investment Details:{" "}
             </Typography>
 
-            <Grid container spacing={2} className="mt-2">
-              <Grid item xs={12} sm={6} className="mt-2">
+            <Grid container spacing={2} className="mt-5">
+              <Grid item xs={12} sm={6}>
                 <CustomTextField
-                  error={!!formErrors?.fullName}
-                  helperText={formErrors?.fullName}
-                  label="Full Name *"
+                  error={!!formErrors?.areaRequired}
+                  helperText={formErrors?.areaRequired}
+                  select
                   fullWidth
-                  placeholder="Enter Full Name"
-                  value={formData.fullName}
+                  defaultValue="0"
+                  value={formData.areaRequired}
+                  label="Area Required( Sq.ft )"
+                  id="custom-select"
+                  onChange={async (e: ChangeEvent<HTMLInputElement>) => {
+                    let val = Number(e.target.value);
+                    setFormData({
+                      ...formData,
+                      areaRequired: Number(e.target.value),
+                    });
+                  }}
+                >
+                  <MenuItem value={0}>
+                    <em>Select Area Required</em>
+                  </MenuItem>
+                  {!loading &&
+                    !!areaRequired?.length &&
+                    areaRequired.map((c) => (
+                      <MenuItem value={c.id} key={c.name}>
+                        {c.name}
+                      </MenuItem>
+                    ))}
+                </CustomTextField>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <CustomTextField
+                  error={!!formErrors?.investmentRange}
+                  helperText={formErrors?.investmentRange}
+                  select
+                  fullWidth
+                  defaultValue="0"
+                  value={formData.investmentRange}
+                  label="Total Initial Investment Range"
+                  id="custom-select"
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                    let val = Number(e.target.value);
+                    setFormData({
+                      ...formData,
+                      investmentRange: Number(e.target.value),
+                    });
+                  }}
+                >
+                  <MenuItem value={0}>
+                    <em>Select Total Initial Investment Range</em>
+                  </MenuItem>
+                  {!loading &&
+                    !!investmentRange?.length &&
+                    investmentRange.map((c) => (
+                      <MenuItem value={c.id} key={c.range}>
+                        {c.range}
+                      </MenuItem>
+                    ))}
+                </CustomTextField>
+              </Grid>
+              <Grid item xs={12} sm={12} className="mt-3">
+                <CustomTextField
+                  type="number"
+                  label="Franchise Fee(in INR)"
+                  id="form-props-number"
+                  fullWidth
+                  error={!!formErrors.franchiseFee}
+                  helperText={formErrors?.franchiseFee}
+                  value={formData?.franchiseFee}
                   onChange={(e) =>
-                    setFormData({ ...formData, fullName: e.target.value })
+                    setFormData({
+                      ...formData,
+                      franchiseFee: e.target.value,
+                    })
                   }
                 />
+              </Grid>
+
+              <Grid item xs={12} sm={6} className="mt-3">
+                <CustomTextField
+                  error={!!formErrors?.paybackPeriod}
+                  helperText={formErrors?.paybackPeriod}
+                  select
+                  fullWidth
+                  defaultValue="0"
+                  value={formData.paybackPeriod}
+                  label="Likely Payback Period for a Unit Franchise"
+                  id="custom-select"
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                    let val = Number(e.target.value);
+                    setFormData({
+                      ...formData,
+                      paybackPeriod: Number(e.target.value),
+                    });
+                  }}
+                >
+                  <MenuItem value={0}>
+                    <em>Select Likely Payback Period for a Unit Franchise</em>
+                  </MenuItem>
+                  {!loading &&
+                    !!paybackPeriod?.length &&
+                    paybackPeriod.map((c) => (
+                      <MenuItem value={c.id} key={c.name}>
+                        {c.name}
+                      </MenuItem>
+                    ))}
+                </CustomTextField>
+              </Grid>
+              <Grid item xs={12} sm={6} className="mt-3">
+                <CustomTextField
+                  error={!!formErrors?.tenurePeriod}
+                  helperText={formErrors?.tenurePeriod}
+                  select
+                  fullWidth
+                  defaultValue="0"
+                  value={formData.tenurePeriod}
+                  label="Lock In Tenure period"
+                  id="custom-select"
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                    let val = Number(e.target.value);
+                    setFormData({
+                      ...formData,
+                      tenurePeriod: Number(e.target.value),
+                    });
+                  }}
+                >
+                  <MenuItem value={0}>
+                    <em>Select Lock In Tenure period</em>
+                  </MenuItem>
+                  {!loading &&
+                    !!paybackPeriod?.length &&
+                    paybackPeriod.map((c) => (
+                      <MenuItem value={c.id} key={c.name}>
+                        {c.name}
+                      </MenuItem>
+                    ))}
+                </CustomTextField>
+              </Grid>
+              <Grid item xs={12} sm={12} className="mt-3">
+                <CustomTextField
+                  multiline
+                  maxRows={4}
+                  minRows={4}
+                  error={!!formErrors?.otherApplicable}
+                  helperText={formErrors?.otherApplicable}
+                  label="Others if applicable"
+                  fullWidth
+                  placeholder="Your Message"
+                  value={formData.usp}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      otherApplicable: e.target.value,
+                    })
+                  }
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} className="mt-3">
+                <CustomTextField
+                  error={!!formErrors?.franchiseDuration}
+                  helperText={formErrors?.franchiseDuration}
+                  select
+                  fullWidth
+                  defaultValue="0"
+                  value={formData.franchiseDuration}
+                  label="How long is the franchise for(in years)?"
+                  id="custom-select"
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                    let val = Number(e.target.value);
+                    setFormData({
+                      ...formData,
+                      franchiseDuration: Number(e.target.value),
+                    });
+                  }}
+                >
+                  <MenuItem value={0}>
+                    <em>Select How long is the franchise for</em>
+                  </MenuItem>
+                  {!loading &&
+                    !!franchiseDuration?.length &&
+                    franchiseDuration.map((c) => (
+                      <MenuItem value={c.id} key={c.name}>
+                        {c.name}
+                      </MenuItem>
+                    ))}
+                </CustomTextField>
+              </Grid>
+              <Grid item xs={12} sm={6} className="mt-3">
+                <CustomTextField
+                  error={!!formErrors?.isRenewable}
+                  helperText={formErrors?.isRenewable}
+                  select
+                  fullWidth
+                  defaultValue="false"
+                  value={formData.isRenewable}
+                  label="Is the term renewable?"
+                  id="custom-select"
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                    let val = e.target.value;
+                    setFormData({
+                      ...formData,
+                      isRenewable: val === "true" ? true : false,
+                    });
+                  }}
+                >
+                  <MenuItem value={"true"}>
+                    <em>Yes</em>
+                  </MenuItem>
+                  <MenuItem value={"false"}>
+                    <em>No</em>
+                  </MenuItem>
+                </CustomTextField>
+              </Grid>
+              <Grid item xs={12} sm={6} className="mt-3">
+                <Typography color="text.primary">
+                  Detailed operating manuals for franchisees
+                </Typography>
+                <RadioGroup
+                  row
+                  aria-label="controlled"
+                  name="controlled"
+                  value={formData.isOperatingManuals}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      isOperatingManuals:
+                        e.target.value === "true" ? true : false,
+                    })
+                  }
+                >
+                  <FormControlLabel
+                    value="true"
+                    control={<Radio />}
+                    label="Yes"
+                  />
+                  <FormControlLabel
+                    value="false"
+                    control={<Radio />}
+                    label="No"
+                  />
+                </RadioGroup>
+              </Grid>
+              <Grid item xs={12} sm={6} className="mt-3">
+                <Typography color="text.primary">
+                  Franchisee training location
+                </Typography>
+                <RadioGroup
+                  row
+                  aria-label="controlled"
+                  name="controlled"
+                  value={formData.trainingLocation}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      trainingLocation:
+                        e.target.value === "true" ? true : false,
+                    })
+                  }
+                >
+                  <FormControlLabel
+                    value="true"
+                    control={<Radio />}
+                    label="Head office"
+                  />
+                  <FormControlLabel
+                    value="false"
+                    control={<Radio />}
+                    label="Online/HQ"
+                  />
+                </RadioGroup>
+              </Grid>
+              <Grid item xs={12} sm={6} className="mt-3">
+                <Typography color="text.primary">
+                  Is field assistance available for franchisee?
+                </Typography>
+                <RadioGroup
+                  row
+                  aria-label="controlled"
+                  name="controlled"
+                  value={formData.isAssistanceAvailable}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      isAssistanceAvailable:
+                        e.target.value === "true" ? true : false,
+                    })
+                  }
+                >
+                  <FormControlLabel
+                    value="true"
+                    control={<Radio />}
+                    label="Yes"
+                  />
+                  <FormControlLabel
+                    value="false"
+                    control={<Radio />}
+                    label="No"
+                  />
+                </RadioGroup>
+              </Grid>
+              <Grid item xs={12} sm={6} className="mt-3">
+                <Typography color="text.primary">
+                  Current IT systems will be included in the franchise
+                </Typography>
+                <RadioGroup
+                  row
+                  aria-label="controlled"
+                  name="controlled"
+                  value={formData.isITSystemIncluded}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      isITSystemIncluded:
+                        e.target.value === "true" ? true : false,
+                    })
+                  }
+                >
+                  <FormControlLabel
+                    value="true"
+                    control={<Radio />}
+                    label="Yes"
+                  />
+                  <FormControlLabel
+                    value="false"
+                    control={<Radio />}
+                    label="No"
+                  />
+                </RadioGroup>
+              </Grid>
+              <Grid item xs={12} sm={12} className="mt-3">
+                <Typography color="text.primary">
+                  Expert guidance from Head Office to franchisee in opening the
+                  franchise
+                </Typography>
+                <RadioGroup
+                  row
+                  aria-label="controlled"
+                  name="controlled"
+                  value={formData.isExpertGuidance}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      isExpertGuidance:
+                        e.target.value === "true" ? true : false,
+                    })
+                  }
+                >
+                  <FormControlLabel
+                    value="true"
+                    control={<Radio />}
+                    label="Yes"
+                  />
+                  <FormControlLabel
+                    value="false"
+                    control={<Radio />}
+                    label="No"
+                  />
+                </RadioGroup>
               </Grid>
             </Grid>
           </Card>
@@ -628,22 +1262,6 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
               {" "}
               Visualize Brand Details:{" "}
             </Typography>
-
-            <Grid container spacing={2} className="mt-2">
-              <Grid item xs={12} sm={6} className="mt-2">
-                <CustomTextField
-                  error={!!formErrors?.fullName}
-                  helperText={formErrors?.fullName}
-                  label="Full Name *"
-                  fullWidth
-                  placeholder="Enter Full Name"
-                  value={formData.fullName}
-                  onChange={(e) =>
-                    setFormData({ ...formData, fullName: e.target.value })
-                  }
-                />
-              </Grid>
-            </Grid>
           </Card>
         </Grid>
 

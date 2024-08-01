@@ -42,7 +42,7 @@ export type BrandEditDataType = {
   salesRevenueModel: number;
   roi: number;
   paybackPeriod: number;
-  tenurePeriod: string | null;
+  tenurePeriod: number | null;
   supportProvided: number[];
   otherApplicable: string | null;
   isOperatingManuals: boolean;
