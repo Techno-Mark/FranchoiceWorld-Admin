@@ -203,8 +203,10 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
             })
           );
         }
+        setFormErrors({ ...formErrors, logo: "" });
       },
       onDropRejected: () => {
+        setFormErrors({ ...formErrors, logo: "" });
         toast.error(
           "Only image files are allowed for logo upload, and max size is 2 MB.",
           { autoClose: 3000 }
@@ -217,11 +219,12 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
     getRootProps: getBrandImagesProps,
     getInputProps: getBrandImagesInputProps,
   } = useDropzone({
-    maxFiles: maxBrandImages,
+    maxFiles: 5,
     maxSize: maxFileSize,
     accept: { "image/*": [] },
     onDrop: (acceptedFiles: File[]) => {
-      if (acceptedFiles.length + brandImages.length > maxBrandImages) {
+      if (acceptedFiles.length + brandImages.length > 5) {
+        setFormErrors({ ...formErrors, brandImages: `You can upload up to ${maxBrandImages} brand images.` });
         toast.error(`You can upload up to ${maxBrandImages} brand images.`, {
           autoClose: 3000,
         });
@@ -233,12 +236,14 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
           Object.assign(file, { preview: URL.createObjectURL(file) })
         ),
       ]);
+      setFormErrors({ ...formErrors, brandImages: "" });
     },
     onDropRejected: () => {
       toast.error(
         "Only image files are allowed for brand images, and max size is 2 MB.",
         { autoClose: 3000 }
       );
+      setFormErrors({ ...formErrors, brandImages: "Only image files are allowed for brand images, and max size is 2 MB." });
     },
   });
 
@@ -256,13 +261,23 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
             })
           );
         }
+        setFormErrors({...formErrors, video:""})
       },
       onDropRejected: () => {
         toast.error("Only video files are allowed, and max size is 2 MB.", {
           autoClose: 3000,
         });
+        setFormErrors({...formErrors, video:"Only video files are allowed, and max size is 2 MB."})
       },
     });
+
+    const handleRemoveBrandImage = (file: FileProp) => {
+      setBrandImages((prevFiles) => {
+        const updatedFiles = prevFiles.filter((f) => f !== file);
+        URL.revokeObjectURL(file.preview || "");
+        return updatedFiles;
+      });
+    };
 
   const renderFilePreview = (file: FileProp) => {
     if (file.type.startsWith("image")) {
@@ -1564,7 +1579,7 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
               {/* Brochure Upload */}
               <div {...getBrochureProps({ className: "dropzone" })}>
                 <input {...getBrochureInputProps()} />
-                <div className="flex items-center flex-col">
+                <div className="flex items-center flex-col w-[450px] h-[200px] p-2 border-dotted border">
                   <Avatar variant="rounded" className="bs-12 is-12 mbe-9">
                     <i className="tabler-upload" />
                   </Avatar>
@@ -1576,7 +1591,7 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
                 </div>
               </div>
               {brochure && (
-                <div className="file-details">
+                <div className="file-details flex justify-between w-[450px]">
                   <Typography className="file-name">{brochure.name}</Typography>
                   <IconButton
                     onClick={() => handleRemoveFile(brochure, setBrochure)}
@@ -1585,6 +1600,89 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
                   </IconButton>
                 </div>
               )}
+            </Grid>
+
+
+            <Grid item xs={12} sm={6} className="mt-3">
+               {/* Logo Dropzone */}
+      <div {...getLogoProps({ className: "dropzone" })}>
+        <input {...getLogoInputProps()} />
+        <div className="flex items-center flex-col">
+          <Avatar variant="rounded" className="bs-12 is-12 mbe-9">
+            <i className="tabler-upload" />
+          </Avatar>
+          <Typography variant="h4" className="mbe-2.5">
+            Drop logo here or click to upload.
+          </Typography>
+          <Typography>Allowed image files</Typography>
+          <Typography>Max size 2 MB</Typography>
+        </div>
+      </div>
+      {logo && (
+        <div className="file-details">
+          <Typography className="file-name">{logo.name}</Typography>
+          <IconButton onClick={() => handleRemoveFile(logo, setLogo)}>
+            <i className="tabler-x text-xl" />
+          </IconButton>
+        </div>
+      )}
+            </Grid>
+
+            <Grid item xs={12} sm={6} className="mt-3">
+            <div {...getBrandImagesProps({ className: "dropzone" })}>
+        <input {...getBrandImagesInputProps()} />
+        <div className="flex items-center flex-col">
+          <Avatar variant="rounded" className="bs-12 is-12 mbe-9">
+            <i className="tabler-upload" />
+          </Avatar>
+          <Typography variant="h4" className="mbe-2.5">
+            Drop brand images here or click to upload.
+          </Typography>
+          <Typography>Allowed image files</Typography>
+          <Typography>Max size 2 MB</Typography>
+        </div>
+      </div>
+      <div className="brand-images-preview">
+        {brandImages.map((file) => (
+          <div key={file.name} className="file-details">
+            {renderFilePreview(file)}
+            <IconButton onClick={() => handleRemoveBrandImage(file)}>
+              <i className="tabler-x text-xl" />
+            </IconButton>
+          </div>
+        ))}
+      </div>
+      {brandImages.length > 0 && (
+        <IconButton onClick={handleRemoveAllBrandImages}>
+          Remove All
+        </IconButton>
+      )}
+
+            </Grid>
+            <Grid item xs={12} sm={6} className="mt-3">
+           
+      {/* Video Dropzone */}
+      <div {...getVideoProps({ className: 'dropzone' })}>
+        <input {...getVideoInputProps()} />
+        <div className="flex items-center flex-col">
+          <Avatar variant="rounded" className="bs-12 is-12 mbe-9">
+            <i className="tabler-upload" />
+          </Avatar>
+          <Typography variant="h4" className="mbe-2.5">
+            Drop video here or click to upload.
+          </Typography>
+          <Typography>Allowed video files</Typography>
+          <Typography>Max size 2 MB</Typography>
+        </div>
+      </div>
+      {video && (
+        <div className="file-details">
+          {renderFilePreview(video)}
+          <IconButton onClick={() => handleRemoveFile(video, setVideo)}>
+            <i className="tabler-x text-xl" />
+          </IconButton>
+        </div>
+      )}
             </Grid>
           </Card>
         </Grid>
