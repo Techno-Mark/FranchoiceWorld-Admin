@@ -39,7 +39,7 @@ export type BrandEditDataType = {
   areaRequired: number;
   investmentRange: number;
   franchiseFee: string;
-  salesRevenueModel: number;
+  salesRevenueModel: number[];
   roi: number;
   paybackPeriod: number;
   tenurePeriod: number | null;

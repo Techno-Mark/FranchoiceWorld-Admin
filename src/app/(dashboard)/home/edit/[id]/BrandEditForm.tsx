@@ -2,12 +2,14 @@ import CustomTextField from "@/@core/components/mui/TextField";
 import LoadingBackdrop from "@/components/LoadingBackdrop";
 import { BrandEditDataType } from "@/types/apps/brandListType";
 import {
+  Avatar,
   Box,
   Button,
   Card,
   Checkbox,
   FormControlLabel,
   Grid,
+  IconButton,
   ListItemText,
   MenuItem,
   Radio,
@@ -34,6 +36,12 @@ import {
 } from "./dropdownAPIService";
 import AppReactDatepicker from "@/libs/styles/AppReactDatepicker";
 import CustomChip from "@/@core/components/mui/Chip";
+import ConfirmationDialog from "./ConfirmationDialog";
+import { toast } from "react-toastify";
+// Icon Imports
+import { useDropzone } from "react-dropzone";
+import { post, postFormData } from "@/services/apiService";
+import { brandList } from "@/services/endpoint/brandList";
 
 const ITEM_HEIGHT = 50;
 const ITEM_PADDING_TOP = 4;
@@ -53,6 +61,16 @@ type pageProps = {
 
 type dropdownValueType = [{ id: number; name: string }];
 type InvestmentRangeType = [{ id: number; range: string }];
+
+type FileProp = {
+  name: string;
+  type: string;
+  size: number;
+  preview?: string;
+};
+
+const maxFileSize = 1000000000; // 10 MB
+const maxBrandImages = 5;
 
 const initialErrorData = {
   fullName: "",
@@ -130,61 +148,220 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
   const [franchiseDuration, setFranchiseDuration] =
     useState<dropdownValueType>();
 
+  //Modal State
+  const [isUpdate, setIsUpdate] = useState<boolean>(false);
+
+  //File upload
+  const [brochure, setBrochure] = useState<FileProp | null>(null);
+  const [logo, setLogo] = useState<FileProp | null>(null);
+  const [brandImages, setBrandImages] = useState<FileProp[]>([]);
+  const [video, setVideo] = useState<FileProp | null>(null);
+
+  //Resources Dropzone
+  // Brochure Dropzone
+  const {
+    getRootProps: getBrochureProps,
+    getInputProps: getBrochureInputProps,
+  } = useDropzone({
+    maxFiles: 1,
+    maxSize: maxFileSize,
+    accept: { "application/pdf": [] },
+    onDrop: (acceptedFiles: File[]) => {
+      if (acceptedFiles.length) {
+        setBrochure(
+          Object.assign(acceptedFiles[0], {
+            preview: URL.createObjectURL(acceptedFiles[0]),
+          })
+        );
+        setFormErrors({ ...formErrors, brochure: "" });
+      }
+    },
+    onDropRejected: () => {
+      setFormErrors({
+        ...formErrors,
+        brochure:
+          "Only PDF files are allowed for brochure upload, and max size is 2 MB.",
+      });
+      toast.error(
+        "Only PDF files are allowed for brochure upload, and max size is 2 MB.",
+        { autoClose: 3000 }
+      );
+    },
+  });
+
+  // Logo Dropzone
+  const { getRootProps: getLogoProps, getInputProps: getLogoInputProps } =
+    useDropzone({
+      maxFiles: 1,
+      maxSize: maxFileSize,
+      accept: { "image/*": [] },
+      onDrop: (acceptedFiles: File[]) => {
+        if (acceptedFiles.length) {
+          setLogo(
+            Object.assign(acceptedFiles[0], {
+              preview: URL.createObjectURL(acceptedFiles[0]),
+            })
+          );
+        }
+        setFormErrors({ ...formErrors, logo: "" });
+      },
+      onDropRejected: () => {
+        setFormErrors({ ...formErrors, logo: "" });
+        toast.error(
+          "Only image files are allowed for logo upload, and max size is 2 MB.",
+          { autoClose: 3000 }
+        );
+      },
+    });
+
+  // Brand Images Dropzone
+  const {
+    getRootProps: getBrandImagesProps,
+    getInputProps: getBrandImagesInputProps,
+  } = useDropzone({
+    maxFiles: 5,
+    maxSize: maxFileSize,
+    accept: { "image/*": [] },
+    onDrop: (acceptedFiles: File[]) => {
+      if (acceptedFiles.length + brandImages.length > 5) {
+        setFormErrors({ ...formErrors, brandImages: `You can upload up to ${maxBrandImages} brand images.` });
+        toast.error(`You can upload up to ${maxBrandImages} brand images.`, {
+          autoClose: 3000,
+        });
+        return;
+      }
+      setBrandImages([
+        ...brandImages,
+        ...acceptedFiles.map((file) =>
+          Object.assign(file, { preview: URL.createObjectURL(file) })
+        ),
+      ]);
+      setFormErrors({ ...formErrors, brandImages: "" });
+    },
+    onDropRejected: () => {
+      toast.error(
+        "Only image files are allowed for brand images, and max size is 2 MB.",
+        { autoClose: 3000 }
+      );
+      setFormErrors({ ...formErrors, brandImages: "Only image files are allowed for brand images, and max size is 2 MB." });
+    },
+  });
+
+  // Video Dropzone
+  const { getRootProps: getVideoProps, getInputProps: getVideoInputProps } =
+    useDropzone({
+      maxFiles: 1,
+      maxSize: maxFileSize,
+      accept: { "video/*": [] },
+      onDrop: (acceptedFiles: File[]) => {
+        if (acceptedFiles.length) {
+          setVideo(
+            Object.assign(acceptedFiles[0], {
+              preview: URL.createObjectURL(acceptedFiles[0]),
+            })
+          );
+        }
+        setFormErrors({...formErrors, video:""})
+      },
+      onDropRejected: () => {
+        toast.error("Only video files are allowed, and max size is 2 MB.", {
+          autoClose: 3000,
+        });
+        setFormErrors({...formErrors, video:"Only video files are allowed, and max size is 2 MB."})
+      },
+    });
+
+    const handleRemoveBrandImage = (file: FileProp) => {
+      setBrandImages((prevFiles) => {
+        const updatedFiles = prevFiles.filter((f) => f !== file);
+        URL.revokeObjectURL(file.preview || "");
+        return updatedFiles;
+      });
+    };
+
+  const renderFilePreview = (file: FileProp) => {
+    if (file.type.startsWith("image")) {
+      return <img width={38} height={38} alt={file.name} src={file.preview} />;
+    } else if (file.type.startsWith("video")) {
+      return <video width={38} height={38} controls src={file.preview} />;
+    } else {
+      return <i className="tabler-file-description" />;
+    }
+  };
+
+  const handleRemoveFile = (
+    file: FileProp,
+    setter: (file: FileProp | null) => void
+  ) => {
+    setter(null);
+    URL.revokeObjectURL(file.preview || "");
+  };
+
+  const handleRemoveAllBrandImages = () => {
+    brandImages.forEach((file) => URL.revokeObjectURL(file.preview || ""));
+    setBrandImages([]);
+  };
+
   //Hooks
   useEffect(() => {
     async function getData() {
-      setLoading(true);
-
-      const [
-        countries,
-        states,
-        cities,
-        industries,
-        subCategories,
-        services,
-        headquarters,
-        outlets,
-        areas,
-        investmentRanges,
-        salesRevenueModels,
-        paybackPeriods,
-        supportProvided,
-        durations,
-        allCity,
-      ] = await Promise.all([
-        fetchCountries(),
-        fetchStates(),
-        fetchCities([editData.userState]),
-        fetchIndustry(),
-        fetchSubCategory(editData.industry),
-        fetchService(editData.subCategory),
-        fetchHeadquarter(),
-        fetchOutlet(),
-        fetchAreaRequired(),
-        fetchInvestmentRange(),
-        fetchSalesAndRevenueModel(),
-        fetchPaybackPeriod(),
-        fetchSupportProvided(),
-        fetchFranchiseDuration(),
-        fetchCities([]),
-      ]);
-      setCountry(countries);
-      setState(states);
-      setCity(cities);
-      setIndustry(industries);
-      setSubCategory(subCategories);
-      setService(services);
-      setHeadquarter(headquarters);
-      setOutlet(outlets);
-      setAreaRequired(areas);
-      setInvestmentRange(investmentRanges);
-      setSalesRevenueModel(salesRevenueModels);
-      setPaybackPeriod(paybackPeriods);
-      setSupportProvided(supportProvided);
-      setFranchiseDuration(durations);
-      setAllCity(allCity);
-      setLoading(false);
+      try {
+        setLoading(true);
+        const [
+          countries,
+          states,
+          cities,
+          industries,
+          subCategories,
+          services,
+          headquarters,
+          outlets,
+          areas,
+          investmentRanges,
+          salesRevenueModels,
+          paybackPeriods,
+          supportProvided,
+          durations,
+          allCity,
+        ] = await Promise.all([
+          fetchCountries(),
+          fetchStates(),
+          fetchCities([editData.userState]),
+          fetchIndustry(),
+          fetchSubCategory(editData.industry),
+          fetchService(editData.subCategory),
+          fetchHeadquarter(),
+          fetchOutlet(),
+          fetchAreaRequired(),
+          fetchInvestmentRange(),
+          fetchSalesAndRevenueModel(),
+          fetchPaybackPeriod(),
+          fetchSupportProvided(),
+          fetchFranchiseDuration(),
+          fetchCities([]),
+        ]);
+        setCountry(countries);
+        setState(states);
+        setCity(cities);
+        setIndustry(industries);
+        setSubCategory(subCategories);
+        setService(services);
+        setHeadquarter(headquarters);
+        setOutlet(outlets);
+        setAreaRequired(areas);
+        setInvestmentRange(investmentRanges);
+        setSalesRevenueModel(salesRevenueModels);
+        setPaybackPeriod(paybackPeriods);
+        setSupportProvided(supportProvided);
+        setFranchiseDuration(durations);
+        setAllCity(allCity);
+        setLoading(false);
+      } catch (error: any) {
+        toast.error(error.message);
+        setLoading(false);
+      }
     }
+
     async function fakeMethod() {
       let data = await fetchStates();
       setState(data);
@@ -199,17 +376,51 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
 
   const handleSubmit = async () => {
     if (checkFormIsValid(formErrors)) {
-      // add validation method
+      setIsUpdate(false);
+
       try {
-        console.log("form data", formData);
+        const {
+          active,
+          approved,
+          brandImages:oldBrandImages,
+          brochure:oldBrochure,
+          logo:oldLogo,
+          video:oldVideo,
+          countryCode,
+          createdAt,
+          deletedAt,
+          franchiseAggrementFile: oldFranchiseAggrementFile,
+          id,
+          kylasLeadId,
+          updatedAt,
+          ...otherALLData
+        } = formData;
+          
+        const formDataObject = new FormData();
+        if (brochure) formDataObject.append("brochure", brochure as unknown as Blob);
+        if (logo) formDataObject.append("logo", logo as unknown as Blob);
+        if (video) formDataObject.append("video", video as unknown as Blob);
+        // if (franchiseAggrementFile)
+        //   formDataObject.append(
+        //     "franchiseAggrementFile",
+        //     franchiseAggrementFile as unknown as Blob
+        //   );
+        if (brandImages && brandImages?.length > 0)
+          brandImages.forEach((file, index) =>
+            formDataObject.append(`brandImages[${index}]`, file as unknown as Blob)
+          );
+
+        for (const [key, value] of formDataObject.entries()) {
+          console.log(`${key}:`, value);
+        }
+        console.log(otherALLData)
+
         // setLoading(true);
         // const endpoint = brandList.edit;
 
-        // const payload = {
-        //   ...formData,
-        // };
-
-        // const response = await post(endpoint, payload);
+        // let response = await post(endpoint,otherALLData);
+    
+        //  response = await postFormData(endpoint, formDataObject);
 
         // if (response.ResponseStatus === "success") {
         //   toast.success(response.Message);
@@ -870,9 +1081,9 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
                 }}
               >
                 {!loading &&
-                  city &&
-                  city?.length &&
-                  city.map((c) => (
+                  allCity &&
+                  allCity?.length &&
+                  allCity.map((c) => (
                     <MenuItem key={c.id} value={c.id}>
                       <Checkbox
                         checked={formData.city?.includes(c.id) || false}
@@ -955,7 +1166,7 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
               </Grid>
               <Grid item xs={12} sm={12} className="mt-3">
                 <CustomTextField
-                  type="number"
+                  type="text"
                   label="Franchise Fee(in INR)"
                   id="form-props-number"
                   fullWidth
@@ -970,7 +1181,109 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
                   }
                 />
               </Grid>
+              <Grid item xs={12} sm={12} className="mt-3">
+                <CustomTextField
+                  select
+                  fullWidth
+                  label="Sales and Revenue Model"
+                  value={formData.salesRevenueModel}
+                  id="demo-multiple-checkbox"
+                  SelectProps={{
+                    MenuProps,
+                    multiple: true,
+                    onChange: (event: SelectChangeEvent<unknown>) => {
+                      let selectedIds = event.target.value as number[];
+                      setFormData({
+                        ...formData,
+                        salesRevenueModel: selectedIds,
+                      });
+                    },
+                    renderValue: (selected) => {
+                      let selectedValue = selected as number[];
+                      const selectedNames =
+                        salesRevenueModel &&
+                        salesRevenueModel.length &&
+                        salesRevenueModel
+                          .filter((item) => selectedValue.includes(item.id))
+                          .map((item) => (
+                            <CustomChip
+                              className="mr-2"
+                              round="true"
+                              label={item.name}
+                              color="primary"
+                            />
+                          ));
+                      return selectedNames;
+                    },
+                  }}
+                >
+                  {!loading &&
+                    salesRevenueModel &&
+                    salesRevenueModel?.length &&
+                    salesRevenueModel.map((c) => (
+                      <MenuItem key={c.id} value={c.id}>
+                        <Checkbox
+                          checked={
+                            formData.salesRevenueModel?.includes(c.id) || false
+                          }
+                        />
+                        <ListItemText primary={c.name} />
+                      </MenuItem>
+                    ))}
+                </CustomTextField>
+              </Grid>
 
+              <Grid item xs={12} sm={12} className="mt-3">
+                <CustomTextField
+                  select
+                  fullWidth
+                  label="Support Provided"
+                  value={formData.supportProvided}
+                  id="demo-multiple-checkbox"
+                  SelectProps={{
+                    MenuProps,
+                    multiple: true,
+                    onChange: (event: SelectChangeEvent<unknown>) => {
+                      let selectedIds = event.target.value as number[];
+                      setFormData({
+                        ...formData,
+                        supportProvided: selectedIds,
+                      });
+                    },
+                    renderValue: (selected) => {
+                      let selectedValue = selected as number[];
+                      const selectedNames =
+                        supportProvided &&
+                        supportProvided.length &&
+                        supportProvided
+                          .filter((item) => selectedValue.includes(item.id))
+                          .map((item) => (
+                            <CustomChip
+                              className="mr-2"
+                              round="true"
+                              label={item.name}
+                              color="primary"
+                            />
+                          ));
+                      return selectedNames;
+                    },
+                  }}
+                >
+                  {!loading &&
+                    supportProvided &&
+                    supportProvided?.length &&
+                    supportProvided.map((c) => (
+                      <MenuItem key={c.id} value={c.id}>
+                        <Checkbox
+                          checked={
+                            formData.supportProvided?.includes(c.id) || false
+                          }
+                        />
+                        <ListItemText primary={c.name} />
+                      </MenuItem>
+                    ))}
+                </CustomTextField>
+              </Grid>
               <Grid item xs={12} sm={6} className="mt-3">
                 <CustomTextField
                   error={!!formErrors?.paybackPeriod}
@@ -1262,6 +1575,115 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
               {" "}
               Visualize Brand Details:{" "}
             </Typography>
+            <Grid item xs={12} sm={6} className="mt-3">
+              {/* Brochure Upload */}
+              <div {...getBrochureProps({ className: "dropzone" })}>
+                <input {...getBrochureInputProps()} />
+                <div className="flex items-center flex-col w-[450px] h-[200px] p-2 border-dotted border">
+                  <Avatar variant="rounded" className="bs-12 is-12 mbe-9">
+                    <i className="tabler-upload" />
+                  </Avatar>
+                  <Typography variant="h4" className="mbe-2.5">
+                    Drop brochure here or click to upload.
+                  </Typography>
+                  <Typography>Allowed *.pdf</Typography>
+                  <Typography>Max size 2 MB</Typography>
+                </div>
+              </div>
+              {brochure && (
+                <div className="file-details flex justify-between w-[450px]">
+                  <Typography className="file-name">{brochure.name}</Typography>
+                  <IconButton
+                    onClick={() => handleRemoveFile(brochure, setBrochure)}
+                  >
+                    <i className="tabler-x text-xl" />
+                  </IconButton>
+                </div>
+              )}
+            </Grid>
+
+
+            <Grid item xs={12} sm={6} className="mt-3">
+               {/* Logo Dropzone */}
+      <div {...getLogoProps({ className: "dropzone" })}>
+        <input {...getLogoInputProps()} />
+        <div className="flex items-center flex-col">
+          <Avatar variant="rounded" className="bs-12 is-12 mbe-9">
+            <i className="tabler-upload" />
+          </Avatar>
+          <Typography variant="h4" className="mbe-2.5">
+            Drop logo here or click to upload.
+          </Typography>
+          <Typography>Allowed image files</Typography>
+          <Typography>Max size 2 MB</Typography>
+        </div>
+      </div>
+      {logo && (
+        <div className="file-details">
+          <Typography className="file-name">{logo.name}</Typography>
+          <IconButton onClick={() => handleRemoveFile(logo, setLogo)}>
+            <i className="tabler-x text-xl" />
+          </IconButton>
+        </div>
+      )}
+            </Grid>
+
+            <Grid item xs={12} sm={6} className="mt-3">
+            <div {...getBrandImagesProps({ className: "dropzone" })}>
+        <input {...getBrandImagesInputProps()} />
+        <div className="flex items-center flex-col">
+          <Avatar variant="rounded" className="bs-12 is-12 mbe-9">
+            <i className="tabler-upload" />
+          </Avatar>
+          <Typography variant="h4" className="mbe-2.5">
+            Drop brand images here or click to upload.
+          </Typography>
+          <Typography>Allowed image files</Typography>
+          <Typography>Max size 2 MB</Typography>
+        </div>
+      </div>
+      <div className="brand-images-preview">
+        {brandImages.map((file) => (
+          <div key={file.name} className="file-details">
+            {renderFilePreview(file)}
+            <IconButton onClick={() => handleRemoveBrandImage(file)}>
+              <i className="tabler-x text-xl" />
+            </IconButton>
+          </div>
+        ))}
+      </div>
+      {brandImages.length > 0 && (
+        <IconButton onClick={handleRemoveAllBrandImages}>
+          Remove All
+        </IconButton>
+      )}
+
+            </Grid>
+            <Grid item xs={12} sm={6} className="mt-3">
+           
+      {/* Video Dropzone */}
+      <div {...getVideoProps({ className: 'dropzone' })}>
+        <input {...getVideoInputProps()} />
+        <div className="flex items-center flex-col">
+          <Avatar variant="rounded" className="bs-12 is-12 mbe-9">
+            <i className="tabler-upload" />
+          </Avatar>
+          <Typography variant="h4" className="mbe-2.5">
+            Drop video here or click to upload.
+          </Typography>
+          <Typography>Allowed video files</Typography>
+          <Typography>Max size 2 MB</Typography>
+        </div>
+      </div>
+      {video && (
+        <div className="file-details">
+          {renderFilePreview(video)}
+          <IconButton onClick={() => handleRemoveFile(video, setVideo)}>
+            <i className="tabler-x text-xl" />
+          </IconButton>
+        </div>
+      )}
+            </Grid>
           </Card>
         </Grid>
 
@@ -1288,12 +1710,23 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
             <Button
               variant="contained"
               type="submit"
-              onClick={() => handleSubmit()}
+              onClick={() => {
+                if (checkFormIsValid(formErrors)) {
+                  setIsUpdate(true);
+                }
+              }}
             >
               Update
             </Button>
           </Box>
         </Grid>
+        {isUpdate && (
+          <ConfirmationDialog
+            handleSubmit={handleSubmit}
+            open={isUpdate}
+            setOpen={(arg1: boolean) => setIsUpdate(arg1)}
+          />
+        )}
       </Grid>
     </>
   );
