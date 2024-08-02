@@ -35,17 +35,17 @@ export const fetchIndustry = async () => {
 
 export const fetchSubCategory = async (industryId: number) => {
   const data = await post(dropdownAPIs.subCategory, { industryId });
-  if (data.ResponseStatus !== "success") {
-    throw new Error("Error While Finding sub category");
-  }
+  // if (data.ResponseStatus !== "success") {
+  //   throw new Error("Error While Finding sub category");
+  // }
   return data?.ResponseData;
 };
 
 export const fetchService = async (sectorId: number) => {
   const data = await post(dropdownAPIs.service, { sectorId });
-  if (data.ResponseStatus !== "success") {
-    throw new Error("Error While Finding service");
-  }
+  // if (data.ResponseStatus !== "success") {
+  //   throw new Error("Error While Finding service");
+  // }
   return data?.ResponseData;
 };
 

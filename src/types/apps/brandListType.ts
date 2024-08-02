@@ -28,8 +28,8 @@ export type BrandEditDataType = {
   subCategory: number;
   headquartersLocation: number;
   service: number;
-  businessCommencedYear: Date;
-  franchiseCommencedYear: Date;
+  businessCommencedYear: string;
+  franchiseCommencedYear: string;
   numberOfLocations: number;
   brandDescription: string;
   usp: string;
@@ -39,10 +39,10 @@ export type BrandEditDataType = {
   areaRequired: number;
   investmentRange: number;
   franchiseFee: string;
-  salesRevenueModel: number;
+  salesRevenueModel: number[];
   roi: number;
   paybackPeriod: number;
-  tenurePeriod: string | null;
+  tenurePeriod: number | null;
   supportProvided: number[];
   otherApplicable: string | null;
   isOperatingManuals: boolean;
