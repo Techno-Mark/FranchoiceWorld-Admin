@@ -156,6 +156,8 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
   const [logo, setLogo] = useState<FileProp | null>(null);
   const [brandImages, setBrandImages] = useState<FileProp[]>([]);
   const [video, setVideo] = useState<FileProp | null>(null);
+  const [franchiseAggrementFile, setFranchiseAggrementFile] =
+    useState<FileProp | null>(null);
 
   //Resources Dropzone
   // Brochure Dropzone
@@ -164,8 +166,8 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
     getInputProps: getBrochureInputProps,
   } = useDropzone({
     maxFiles: 1,
-    maxSize: maxFileSize,
-    accept: { "application/pdf": [] },
+    maxSize: 25000000, //25MB
+    accept: { "application/pdf": [], "image/*": [] },
     onDrop: (acceptedFiles: File[]) => {
       if (acceptedFiles.length) {
         setBrochure(
@@ -177,13 +179,39 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
       }
     },
     onDropRejected: () => {
-      setFormErrors({
-        ...formErrors,
-        brochure:
-          "Only PDF files are allowed for brochure upload, and max size is 2 MB.",
-      });
       toast.error(
-        "Only PDF files are allowed for brochure upload, and max size is 2 MB.",
+        "Only PDF & Image files are allowed for brochure upload, and max size is 25 MB.",
+        { autoClose: 3000 }
+      );
+    },
+  });
+
+  // Franchise Aggrement Dropzone
+  const {
+    getRootProps: getFranchiseAggrementProps,
+    getInputProps: getFranchiseAggrementInputProps,
+  } = useDropzone({
+    maxFiles: 1,
+    maxSize: 10000000,
+    accept: {
+      "application/pdf": [],
+      "application/msword": [],
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+        [],
+    },
+    onDrop: (acceptedFiles: File[]) => {
+      if (acceptedFiles.length) {
+        setFranchiseAggrementFile(
+          Object.assign(acceptedFiles[0], {
+            preview: URL.createObjectURL(acceptedFiles[0]),
+          })
+        );
+        setFormErrors({ ...formErrors, franchiseAggrementFile: "" });
+      }
+    },
+    onDropRejected: () => {
+      toast.error(
+        "Only PDF & word files are allowed for brochure upload, and max size is 10 MB.",
         { autoClose: 3000 }
       );
     },
@@ -193,7 +221,7 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
   const { getRootProps: getLogoProps, getInputProps: getLogoInputProps } =
     useDropzone({
       maxFiles: 1,
-      maxSize: maxFileSize,
+      maxSize: 5000000,
       accept: { "image/*": [] },
       onDrop: (acceptedFiles: File[]) => {
         if (acceptedFiles.length) {
@@ -206,9 +234,8 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
         setFormErrors({ ...formErrors, logo: "" });
       },
       onDropRejected: () => {
-        setFormErrors({ ...formErrors, logo: "" });
         toast.error(
-          "Only image files are allowed for logo upload, and max size is 2 MB.",
+          "Only image files are allowed for logo upload, and max size is 5 MB.",
           { autoClose: 3000 }
         );
       },
@@ -220,11 +247,10 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
     getInputProps: getBrandImagesInputProps,
   } = useDropzone({
     maxFiles: 5,
-    maxSize: maxFileSize,
+    maxSize: 5000000,
     accept: { "image/*": [] },
     onDrop: (acceptedFiles: File[]) => {
       if (acceptedFiles.length + brandImages.length > 5) {
-        setFormErrors({ ...formErrors, brandImages: `You can upload up to ${maxBrandImages} brand images.` });
         toast.error(`You can upload up to ${maxBrandImages} brand images.`, {
           autoClose: 3000,
         });
@@ -240,10 +266,9 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
     },
     onDropRejected: () => {
       toast.error(
-        "Only image files are allowed for brand images, and max size is 2 MB.",
+        "Only image files are allowed for brand images, and max size is 5 MB.",
         { autoClose: 3000 }
       );
-      setFormErrors({ ...formErrors, brandImages: "Only image files are allowed for brand images, and max size is 2 MB." });
     },
   });
 
@@ -251,7 +276,7 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
   const { getRootProps: getVideoProps, getInputProps: getVideoInputProps } =
     useDropzone({
       maxFiles: 1,
-      maxSize: maxFileSize,
+      maxSize: 25000000,
       accept: { "video/*": [] },
       onDrop: (acceptedFiles: File[]) => {
         if (acceptedFiles.length) {
@@ -261,31 +286,33 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
             })
           );
         }
-        setFormErrors({...formErrors, video:""})
+        setFormErrors({ ...formErrors, video: "" });
       },
       onDropRejected: () => {
-        toast.error("Only video files are allowed, and max size is 2 MB.", {
+        toast.error("Only video files are allowed, and max size is 25 MB.", {
           autoClose: 3000,
         });
-        setFormErrors({...formErrors, video:"Only video files are allowed, and max size is 2 MB."})
       },
     });
 
-    const handleRemoveBrandImage = (file: FileProp) => {
-      setBrandImages((prevFiles) => {
-        const updatedFiles = prevFiles.filter((f) => f !== file);
-        URL.revokeObjectURL(file.preview || "");
-        return updatedFiles;
-      });
-    };
+  const handleRemoveBrandImage = (file: FileProp) => {
+    if (brandImages?.length && brandImages.length == 1) {
+      setFormErrors({ ...formErrors, brandImages: "" });
+    }
+    setBrandImages((prevFiles) => {
+      const updatedFiles = prevFiles.filter((f) => f !== file);
+      URL.revokeObjectURL(file.preview || "");
+      return updatedFiles;
+    });
+  };
 
   const renderFilePreview = (file: FileProp) => {
     if (file.type.startsWith("image")) {
-      return <img width={38} height={38} alt={file.name} src={file.preview} />;
+      return <img width={80} height={80} alt={file.name} src={file.preview} />;
     } else if (file.type.startsWith("video")) {
-      return <video width={38} height={38} controls src={file.preview} />;
+      return <video width={150} height={80} controls src={file.preview} />;
     } else {
-      return <i className="tabler-file-description" />;
+      return <i className="tabler-file-description w-[40px] h-[40px]" />;
     }
   };
 
@@ -304,6 +331,46 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
 
   //Hooks
   useEffect(() => {
+    async function checkInitialFormError() {
+      const errors = { ...formErrors };
+      if (!editData?.fullName || editData.fullName === null) {
+        errors.fullName = "Please Enter Full Name";
+      }
+      if (!editData?.email || editData.email === null) {
+        errors.email = "Please Enter Email";
+      }
+      if (!editData?.brandName || editData.brandName === null) {
+        errors.brandName = "Please Enter Brand Name";
+      }
+
+      if (
+        !editData?.country ||
+        editData.country === 0 ||
+        editData.country === null
+      ) {
+        errors.country = "Please Select Country";
+      }
+
+      if (
+        !editData?.userState ||
+        editData.userCity === 0 ||
+        editData.userCity === null
+      ) {
+        errors.userState = "Please Select State";
+      }
+      if (
+        !editData?.userCity ||
+        editData.userCity === 0 ||
+        editData.userCity === null
+      ) {
+        errors.userCity = "Please Select User City";
+      }
+      if (!editData?.pincode) {
+        errors.pincode = "Please Enter Your Pincode";
+      }
+      setFormErrors(errors);
+    }
+
     async function getData() {
       try {
         setLoading(true);
@@ -328,7 +395,7 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
           fetchStates(),
           fetchCities([editData.userState]),
           fetchIndustry(),
-          fetchSubCategory(editData.industry),
+          fetchSubCategory(editData?.industry),
           fetchService(editData.subCategory),
           fetchHeadquarter(),
           fetchOutlet(),
@@ -355,6 +422,7 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
         setSupportProvided(supportProvided);
         setFranchiseDuration(durations);
         setAllCity(allCity);
+        checkInitialFormError();
         setLoading(false);
       } catch (error: any) {
         toast.error(error.message);
@@ -382,10 +450,10 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
         const {
           active,
           approved,
-          brandImages:oldBrandImages,
-          brochure:oldBrochure,
-          logo:oldLogo,
-          video:oldVideo,
+          brandImages: oldBrandImages,
+          brochure: oldBrochure,
+          logo: oldLogo,
+          video: oldVideo,
           countryCode,
           createdAt,
           deletedAt,
@@ -395,39 +463,56 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
           updatedAt,
           ...otherALLData
         } = formData;
-          
+
         const formDataObject = new FormData();
-        if (brochure) formDataObject.append("brochure", brochure as unknown as Blob);
-        if (logo) formDataObject.append("logo", logo as unknown as Blob);
-        if (video) formDataObject.append("video", video as unknown as Blob);
-        // if (franchiseAggrementFile)
-        //   formDataObject.append(
-        //     "franchiseAggrementFile",
-        //     franchiseAggrementFile as unknown as Blob
-        //   );
-        if (brandImages && brandImages?.length > 0)
-          brandImages.forEach((file, index) =>
-            formDataObject.append(`brandImages[${index}]`, file as unknown as Blob)
+        let hasAnyFile = false;
+        if (brochure) {
+          formDataObject.append("brochure", brochure as unknown as Blob);
+          hasAnyFile = true;
+        }
+        if (logo) {
+          formDataObject.append("logo", logo as unknown as Blob);
+          hasAnyFile = true;
+        }
+        if (video) {
+          formDataObject.append("video", video as unknown as Blob);
+          hasAnyFile = true;
+        }
+        if (franchiseAggrementFile) {
+          hasAnyFile = true;
+          formDataObject.append(
+            "franchiseAggrementFile",
+            franchiseAggrementFile as unknown as Blob
           );
+        }
+        if (brandImages && brandImages?.length > 0) {
+          brandImages.forEach((file, index) =>
+            formDataObject.append(`brandImages`, file as unknown as Blob)
+          );
+          hasAnyFile = true;
+        }
 
         for (const [key, value] of formDataObject.entries()) {
           console.log(`${key}:`, value);
         }
-        console.log(otherALLData)
+        console.log(otherALLData);
 
-        // setLoading(true);
-        // const endpoint = brandList.edit;
+        setLoading(true);
+        const endpoint = brandList.edit;
+        let response = await post(endpoint, { ...otherALLData, brandId: id });
 
-        // let response = await post(endpoint,otherALLData);
-    
-        //  response = await postFormData(endpoint, formDataObject);
+        if (hasAnyFile) {
+          formDataObject.append("brandId", id.toString());
+          response = await postFormData(endpoint, formDataObject);
+        }
 
-        // if (response.ResponseStatus === "success") {
-        //   toast.success(response.Message);
-        // } else {
-        //   toast.error(response.Message);
-        // }
-        // setLoading(false);
+        if (response.ResponseStatus === "success") {
+          toast.success(response.Message);
+        } else {
+          toast.error(response.Message);
+        }
+        setLoading(false);
+        handleClose();
       } catch (error: any) {
         console.error("Error fetching data:", error.message);
         setLoading(false);
@@ -764,7 +849,7 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
               <CustomTextField
                 error={!!formErrors?.companyName}
                 helperText={formErrors?.companyName}
-                label="Company Name *"
+                label="Company Name"
                 fullWidth
                 placeholder="Enter Company Name"
                 value={formData.companyName}
@@ -877,11 +962,16 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
                 <AppReactDatepicker
                   showYearPicker
                   dateFormat="yyyy"
-                  selected={formData.businessCommencedYear}
-                  id="year-picker"
-                  onChange={(date: Date) =>
-                    setFormData({ ...formData, businessCommencedYear: date })
+                  selected={
+                    formData.businessCommencedYear
+                      ? new Date(formData.businessCommencedYear)
+                      : null
                   }
+                  id="year-picker"
+                  onChange={(date: Date) => {
+                    const year = date.getFullYear().toString();
+                    setFormData({ ...formData, businessCommencedYear: year });
+                  }}
                   placeholderText="Business Commenced Year"
                   customInput={
                     <CustomTextField
@@ -895,11 +985,16 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
                 <AppReactDatepicker
                   showYearPicker
                   dateFormat="yyyy"
-                  selected={formData.franchiseCommencedYear}
-                  id="year-picker"
-                  onChange={(date: Date) =>
-                    setFormData({ ...formData, franchiseCommencedYear: date })
+                  selected={
+                    formData.franchiseCommencedYear
+                      ? new Date(formData.franchiseCommencedYear)
+                      : null
                   }
+                  id="year-picker"
+                  onChange={(date: Date) => {
+                    const year = date.getFullYear().toString();
+                    setFormData({ ...formData, franchiseCommencedYear: year });
+                  }}
                   placeholderText="Franchise Commenced On"
                   customInput={
                     <CustomTextField label="Franchise Commenced On" fullWidth />
@@ -1006,7 +1101,7 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
                 select
                 fullWidth
                 label="States"
-                value={formData.state}
+                value={formData.state || []}
                 id="demo-multiple-checkbox"
                 SelectProps={{
                   MenuProps,
@@ -1052,7 +1147,7 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
                 select
                 fullWidth
                 label="Cities"
-                value={formData.city}
+                value={formData.city || []}
                 id="demo-multiple-checkbox"
                 SelectProps={{
                   MenuProps,
@@ -1186,7 +1281,7 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
                   select
                   fullWidth
                   label="Sales and Revenue Model"
-                  value={formData.salesRevenueModel}
+                  value={formData.salesRevenueModel || []}
                   id="demo-multiple-checkbox"
                   SelectProps={{
                     MenuProps,
@@ -1238,7 +1333,7 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
                   select
                   fullWidth
                   label="Support Provided"
-                  value={formData.supportProvided}
+                  value={formData.supportProvided || []}
                   id="demo-multiple-checkbox"
                   SelectProps={{
                     MenuProps,
@@ -1354,7 +1449,7 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
                   label="Others if applicable"
                   fullWidth
                   placeholder="Your Message"
-                  value={formData.usp}
+                  value={formData.otherApplicable}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
@@ -1575,114 +1670,188 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
               {" "}
               Visualize Brand Details:{" "}
             </Typography>
-            <Grid item xs={12} sm={6} className="mt-3">
-              {/* Brochure Upload */}
-              <div {...getBrochureProps({ className: "dropzone" })}>
-                <input {...getBrochureInputProps()} />
-                <div className="flex items-center flex-col w-[450px] h-[200px] p-2 border-dotted border">
-                  <Avatar variant="rounded" className="bs-12 is-12 mbe-9">
-                    <i className="tabler-upload" />
-                  </Avatar>
-                  <Typography variant="h4" className="mbe-2.5">
-                    Drop brochure here or click to upload.
+            <Grid container spacing={2} className="mt-5">
+              <Grid item xs={12} sm={6} className="mt-3">
+                {/* Brochure Upload */}
+                {!brochure && (
+                  <div {...getBrochureProps({ className: "dropzone" })}>
+                    <input {...getBrochureInputProps()} />
+                    <div className="flex items-center flex-col w-[450px] h-[200px] p-2 border-dashed border-2">
+                      <Avatar variant="rounded" className="bs-12 is-12 mbe-9">
+                        <i className="tabler-upload" />
+                      </Avatar>
+                      <Typography variant="h5" className="mbe-2.5">
+                        Drop brochure here or click to upload.
+                      </Typography>
+                      <Typography>Allowed *.pdf & Image</Typography>
+                      <Typography>Max size 25 MB</Typography>
+                    </div>
+                  </div>
+                )}
+
+                {brochure && (
+                  <div className="file-details flex justify-between items-center w-[450px]">
+                    {renderFilePreview(brochure)}
+                    <Typography className="file-name">
+                      {brochure.name}
+                    </Typography>
+                    <IconButton
+                      onClick={() => {
+                        handleRemoveFile(brochure, setBrochure);
+                        setFormErrors({ ...formErrors, brochure: "" });
+                      }}
+                    >
+                      <i className="tabler-x text-xl" />
+                    </IconButton>
+                  </div>
+                )}
+
+                {formErrors.brochure && (
+                  <Typography variant="h6" className="text-red-600 w-[400px]">
+                    {formErrors.brochure}
                   </Typography>
-                  <Typography>Allowed *.pdf</Typography>
-                  <Typography>Max size 2 MB</Typography>
+                )}
+              </Grid>
+
+              <Grid item xs={12} sm={6} className="mt-3">
+                {/* Logo Dropzone */}
+                {!logo && (
+                  <div {...getLogoProps({ className: "dropzone" })}>
+                    <input {...getLogoInputProps()} />
+                    <div className="flex items-center flex-col w-[450px] h-[200px] p-2 border-dashed border-2">
+                      <Avatar variant="rounded" className="bs-12 is-12 mbe-9">
+                        <i className="tabler-upload" />
+                      </Avatar>
+                      <Typography variant="h5" className="mbe-2.5">
+                        Drop logo here or click to upload.
+                      </Typography>
+                      <Typography>Allowed image files</Typography>
+                      <Typography>Max size 5 MB</Typography>
+                    </div>
+                  </div>
+                )}
+
+                {logo && (
+                  <div className="file-details flex justify-between items-center w-[450px]">
+                    {renderFilePreview(logo)}
+                    <Typography className="file-name">{logo.name}</Typography>
+                    <IconButton
+                      onClick={() => {
+                        handleRemoveFile(logo, setLogo);
+                        setFormErrors({ ...formErrors, logo: "" });
+                      }}
+                    >
+                      <i className="tabler-x text-xl" />
+                    </IconButton>
+                  </div>
+                )}
+              </Grid>
+
+              <Grid item xs={12} sm={6} className="mt-3">
+                <div {...getBrandImagesProps({ className: "dropzone" })}>
+                  <input {...getBrandImagesInputProps()} />
+                  <div className="flex items-center flex-col w-[450px] h-[200px] p-2 border-dashed border-2">
+                    <Avatar variant="rounded" className="bs-12 is-12 mbe-9">
+                      <i className="tabler-upload" />
+                    </Avatar>
+                    <Typography variant="h5" className="mbe-2.5">
+                      Drop brand images here or click to upload.
+                    </Typography>
+                    <Typography>Allowed image files</Typography>
+                    <Typography>Max size 5 MB</Typography>
+                  </div>
                 </div>
-              </div>
-              {brochure && (
-                <div className="file-details flex justify-between w-[450px]">
-                  <Typography className="file-name">{brochure.name}</Typography>
-                  <IconButton
-                    onClick={() => handleRemoveFile(brochure, setBrochure)}
+                <div className="brand-images-preview">
+                  {brandImages.map((file) => (
+                    <div
+                      key={file.name}
+                      className="file-details flex justify-between items-center w-[450px]"
+                    >
+                      {renderFilePreview(file)}
+                      <Typography className="file-name">{file.name}</Typography>
+                      <IconButton onClick={() => handleRemoveBrandImage(file)}>
+                        <i className="tabler-x text-xl" />
+                      </IconButton>
+                    </div>
+                  ))}
+                </div>
+              </Grid>
+              <Grid item xs={12} sm={6} className="mt-3">
+                {/* Video Dropzone */}
+                {!video && (
+                  <div {...getVideoProps({ className: "dropzone" })}>
+                    <input {...getVideoInputProps()} />
+                    <div className="flex items-center flex-col w-[450px] h-[200px] p-2 border-dashed border-2">
+                      <Avatar variant="rounded" className="bs-12 is-12 mbe-9">
+                        <i className="tabler-upload" />
+                      </Avatar>
+                      <Typography variant="h5" className="mbe-2.5">
+                        Drop video here or click to upload.
+                      </Typography>
+                      <Typography>Allowed video files</Typography>
+                      <Typography>Max size 25 MB</Typography>
+                    </div>
+                  </div>
+                )}
+
+                {video && (
+                  <div className="file-details flex justify-between items-center w-[450px]">
+                    {renderFilePreview(video)}
+                    <Typography className="file-name">{video.name}</Typography>
+                    <IconButton
+                      onClick={() => {
+                        handleRemoveFile(video, setVideo);
+                        setFormErrors({ ...formErrors, video: "" });
+                      }}
+                    >
+                      <i className="tabler-x text-xl" />
+                    </IconButton>
+                  </div>
+                )}
+              </Grid>
+              <Grid item xs={12} sm={6} className="mt-3">
+                {/* Video Dropzone */}
+                {!franchiseAggrementFile && (
+                  <div
+                    {...getFranchiseAggrementProps({ className: "dropzone" })}
                   >
-                    <i className="tabler-x text-xl" />
-                  </IconButton>
-                </div>
-              )}
-            </Grid>
+                    <input {...getFranchiseAggrementInputProps()} />
+                    <div className="flex items-center flex-col w-[450px] h-[200px] p-2 border-dashed border-2">
+                      <Avatar variant="rounded" className="bs-12 is-12 mbe-9">
+                        <i className="tabler-upload" />
+                      </Avatar>
+                      <Typography variant="h5" className="mbe-2.5">
+                        Drop Franchise Agrement here or click to upload.
+                      </Typography>
+                      <Typography>Allowed pdf & word files</Typography>
+                      <Typography>Max size 10 MB</Typography>
+                    </div>
+                  </div>
+                )}
 
-
-            <Grid item xs={12} sm={6} className="mt-3">
-               {/* Logo Dropzone */}
-      <div {...getLogoProps({ className: "dropzone" })}>
-        <input {...getLogoInputProps()} />
-        <div className="flex items-center flex-col">
-          <Avatar variant="rounded" className="bs-12 is-12 mbe-9">
-            <i className="tabler-upload" />
-          </Avatar>
-          <Typography variant="h4" className="mbe-2.5">
-            Drop logo here or click to upload.
-          </Typography>
-          <Typography>Allowed image files</Typography>
-          <Typography>Max size 2 MB</Typography>
-        </div>
-      </div>
-      {logo && (
-        <div className="file-details">
-          <Typography className="file-name">{logo.name}</Typography>
-          <IconButton onClick={() => handleRemoveFile(logo, setLogo)}>
-            <i className="tabler-x text-xl" />
-          </IconButton>
-        </div>
-      )}
-            </Grid>
-
-            <Grid item xs={12} sm={6} className="mt-3">
-            <div {...getBrandImagesProps({ className: "dropzone" })}>
-        <input {...getBrandImagesInputProps()} />
-        <div className="flex items-center flex-col">
-          <Avatar variant="rounded" className="bs-12 is-12 mbe-9">
-            <i className="tabler-upload" />
-          </Avatar>
-          <Typography variant="h4" className="mbe-2.5">
-            Drop brand images here or click to upload.
-          </Typography>
-          <Typography>Allowed image files</Typography>
-          <Typography>Max size 2 MB</Typography>
-        </div>
-      </div>
-      <div className="brand-images-preview">
-        {brandImages.map((file) => (
-          <div key={file.name} className="file-details">
-            {renderFilePreview(file)}
-            <IconButton onClick={() => handleRemoveBrandImage(file)}>
-              <i className="tabler-x text-xl" />
-            </IconButton>
-          </div>
-        ))}
-      </div>
-      {brandImages.length > 0 && (
-        <IconButton onClick={handleRemoveAllBrandImages}>
-          Remove All
-        </IconButton>
-      )}
-
-            </Grid>
-            <Grid item xs={12} sm={6} className="mt-3">
-           
-      {/* Video Dropzone */}
-      <div {...getVideoProps({ className: 'dropzone' })}>
-        <input {...getVideoInputProps()} />
-        <div className="flex items-center flex-col">
-          <Avatar variant="rounded" className="bs-12 is-12 mbe-9">
-            <i className="tabler-upload" />
-          </Avatar>
-          <Typography variant="h4" className="mbe-2.5">
-            Drop video here or click to upload.
-          </Typography>
-          <Typography>Allowed video files</Typography>
-          <Typography>Max size 2 MB</Typography>
-        </div>
-      </div>
-      {video && (
-        <div className="file-details">
-          {renderFilePreview(video)}
-          <IconButton onClick={() => handleRemoveFile(video, setVideo)}>
-            <i className="tabler-x text-xl" />
-          </IconButton>
-        </div>
-      )}
+                {franchiseAggrementFile && (
+                  <div className="file-details flex justify-between items-center w-[450px]">
+                    {renderFilePreview(franchiseAggrementFile)}
+                    <Typography className="file-name">
+                      {franchiseAggrementFile.name}
+                    </Typography>
+                    <IconButton
+                      onClick={() => {
+                        handleRemoveFile(
+                          franchiseAggrementFile,
+                          setFranchiseAggrementFile
+                        );
+                        setFormErrors({
+                          ...formErrors,
+                          franchiseAggrementFile: "",
+                        });
+                      }}
+                    >
+                      <i className="tabler-x text-xl" />
+                    </IconButton>
+                  </div>
+                )}
+              </Grid>
             </Grid>
           </Card>
         </Grid>

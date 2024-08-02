@@ -28,8 +28,8 @@ export type BrandEditDataType = {
   subCategory: number;
   headquartersLocation: number;
   service: number;
-  businessCommencedYear: Date;
-  franchiseCommencedYear: Date;
+  businessCommencedYear: string;
+  franchiseCommencedYear: string;
   numberOfLocations: number;
   brandDescription: string;
   usp: string;
