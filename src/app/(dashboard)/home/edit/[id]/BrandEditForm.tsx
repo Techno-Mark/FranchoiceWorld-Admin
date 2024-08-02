@@ -1101,7 +1101,7 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
                 select
                 fullWidth
                 label="States"
-                value={formData.state || []}
+                value={Array.isArray(formData.state) ? formData.state : []}
                 id="demo-multiple-checkbox"
                 SelectProps={{
                   MenuProps,
@@ -1147,7 +1147,7 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
                 select
                 fullWidth
                 label="Cities"
-                value={formData.city || []}
+                value={Array.isArray(formData.city) ? formData.city : []}
                 id="demo-multiple-checkbox"
                 SelectProps={{
                   MenuProps,
@@ -1281,7 +1281,11 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
                   select
                   fullWidth
                   label="Sales and Revenue Model"
-                  value={formData.salesRevenueModel || []}
+                  value={
+                    Array.isArray(formData.salesRevenueModel)
+                      ? formData.salesRevenueModel
+                      : []
+                  }
                   id="demo-multiple-checkbox"
                   SelectProps={{
                     MenuProps,
@@ -1333,7 +1337,11 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
                   select
                   fullWidth
                   label="Support Provided"
-                  value={formData.supportProvided || []}
+                  value={
+                    Array.isArray(formData.supportProvided)
+                      ? formData.supportProvided
+                      : []
+                  }
                   id="demo-multiple-checkbox"
                   SelectProps={{
                     MenuProps,
