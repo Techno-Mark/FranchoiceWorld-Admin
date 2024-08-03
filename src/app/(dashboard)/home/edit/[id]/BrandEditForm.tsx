@@ -593,7 +593,7 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
             "franchiseAggrementFile",
             franchiseAggrementFile as unknown as Blob
           );
-          console.log('franchise Aggrement file',isFilesTouched)
+          
         }
         if (
           brandImages &&
@@ -606,10 +606,6 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
           hasAnyFile = true;
         }
 
-        for (const [key, value] of formDataObject.entries()) {
-          console.log(`${key}:`, value);
-        }
-  
         setLoading(true);
         const endpoint = brandList.edit;
         let response = await post(endpoint, { ...otherALLData, brandId: id });
