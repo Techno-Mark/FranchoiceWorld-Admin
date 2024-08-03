@@ -112,3 +112,15 @@ export const fetchFranchiseDuration = async () => {
   }
   return data?.ResponseData;
 };
+
+
+
+export const fetchFile = async(fileName:string) => {
+  const apiURL = process.env.NEXT_PUBLIC_BASE_API_URL;
+  const data = await fetch(`${apiURL}/${fileName}`)
+  if(!data.ok){
+    throw new Error("Error Occur while Fetching Resources File")
+  }
+  const blob = await data.blob();
+  return blob;
+}
