@@ -22,6 +22,7 @@ import {
   fetchAreaRequired,
   fetchCities,
   fetchCountries,
+  fetchFile,
   fetchFranchiseDuration,
   fetchHeadquarter,
   fetchIndustry,
@@ -69,7 +70,14 @@ type FileProp = {
   preview?: string;
 };
 
-const maxFileSize = 1000000000; // 10 MB
+const fileListsType = {
+  brochure: false,
+  logo: false,
+  brandImages: false,
+  video: false,
+  franchiseAggrementFile: false,
+};
+
 const maxBrandImages = 5;
 
 const initialErrorData = {
@@ -158,6 +166,8 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
   const [video, setVideo] = useState<FileProp | null>(null);
   const [franchiseAggrementFile, setFranchiseAggrementFile] =
     useState<FileProp | null>(null);
+  const [isFilesTouched, setIsFilesTouched] =
+    useState<typeof fileListsType>(fileListsType);
 
   //Resources Dropzone
   // Brochure Dropzone
@@ -167,7 +177,12 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
   } = useDropzone({
     maxFiles: 1,
     maxSize: 25000000, //25MB
-    accept: { "application/pdf": [], "image/*": [] },
+    accept: {
+      "application/pdf": [],
+      "image/png": [],
+      "image/jpeg": [],
+      "image/jpg": [],
+    },
     onDrop: (acceptedFiles: File[]) => {
       if (acceptedFiles.length) {
         setBrochure(
@@ -176,11 +191,12 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
           })
         );
         setFormErrors({ ...formErrors, brochure: "" });
+        setIsFilesTouched({ ...isFilesTouched, brochure: true });
       }
     },
     onDropRejected: () => {
       toast.error(
-        "Only PDF & Image files are allowed for brochure upload, and max size is 25 MB.",
+        "Only pdf, png, jpeg & jpg files are allowed for brochure upload, and max size is 25 MB.",
         { autoClose: 3000 }
       );
     },
@@ -207,6 +223,7 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
           })
         );
         setFormErrors({ ...formErrors, franchiseAggrementFile: "" });
+        setIsFilesTouched({ ...isFilesTouched, franchiseAggrementFile: true });
       }
     },
     onDropRejected: () => {
@@ -222,7 +239,13 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
     useDropzone({
       maxFiles: 1,
       maxSize: 5000000,
-      accept: { "image/*": [] },
+      accept: {
+        "image/jpeg": [],
+        "image/jpg": [],
+        "image/png": [],
+        "image/gif": [],
+        "application/pdf": [],
+      },
       onDrop: (acceptedFiles: File[]) => {
         if (acceptedFiles.length) {
           setLogo(
@@ -232,10 +255,11 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
           );
         }
         setFormErrors({ ...formErrors, logo: "" });
+        setIsFilesTouched({ ...isFilesTouched, logo: true });
       },
       onDropRejected: () => {
         toast.error(
-          "Only image files are allowed for logo upload, and max size is 5 MB.",
+          "Only jpeg, jpg, png, gif & pdf files are allowed for logo upload, and max size is 5 MB.",
           { autoClose: 3000 }
         );
       },
@@ -248,7 +272,12 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
   } = useDropzone({
     maxFiles: 5,
     maxSize: 5000000,
-    accept: { "image/*": [] },
+    accept: {
+      "image/jpeg": [],
+      "image/jpg": [],
+      "image/png": [],
+      "image/gif": [],
+    },
     onDrop: (acceptedFiles: File[]) => {
       if (acceptedFiles.length + brandImages.length > 5) {
         toast.error(`You can upload up to ${maxBrandImages} brand images.`, {
@@ -263,10 +292,11 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
         ),
       ]);
       setFormErrors({ ...formErrors, brandImages: "" });
+      setIsFilesTouched({ ...isFilesTouched, brandImages: true });
     },
     onDropRejected: () => {
       toast.error(
-        "Only image files are allowed for brand images, and max size is 5 MB.",
+        "Only jpeg, jpg, png & gif files are allowed for brand images, and max size is 5 MB.",
         { autoClose: 3000 }
       );
     },
@@ -287,6 +317,7 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
           );
         }
         setFormErrors({ ...formErrors, video: "" });
+        setIsFilesTouched({ ...isFilesTouched, video: true });
       },
       onDropRejected: () => {
         toast.error("Only video files are allowed, and max size is 25 MB.", {
@@ -296,6 +327,7 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
     });
 
   const handleRemoveBrandImage = (file: FileProp) => {
+    setIsFilesTouched({ ...isFilesTouched, brandImages: true });
     if (brandImages?.length && brandImages.length == 1) {
       setFormErrors({ ...formErrors, brandImages: "" });
     }
@@ -308,11 +340,13 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
 
   const renderFilePreview = (file: FileProp) => {
     if (file.type.startsWith("image")) {
-      return <img width={80} height={80} alt={file.name} src={file.preview} />;
+      return (
+        <img width={100} height={100} alt={file.name} src={file.preview} />
+      );
     } else if (file.type.startsWith("video")) {
-      return <video width={150} height={80} controls src={file.preview} />;
+      return <video width={150} height={100} controls src={file.preview} />;
     } else {
-      return <i className="tabler-file-description w-[40px] h-[40px]" />;
+      return <i className="tabler-file-description w-[60px] h-[60px]" />;
     }
   };
 
@@ -423,11 +457,86 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
         setFranchiseDuration(durations);
         setAllCity(allCity);
         checkInitialFormError();
+        await downloadAvailableResourceFiles();
         setLoading(false);
       } catch (error: any) {
         toast.error(error.message);
         setLoading(false);
       }
+    }
+
+    async function downloadAvailableResourceFiles() {
+      try {
+        let data = null;
+        let fileObject = null;
+        // Download Brochure File
+        if (editData.brochure && editData.brochure.length > 5) {
+          data = await fetchFile(editData.brochure);
+          fileObject = new File([data], editData.brochure.split("/")?.[2] || editData.brochure, { type: data.type });
+          setBrochure(
+            Object.assign(fileObject, {
+              preview: URL.createObjectURL(fileObject),
+            })
+          );
+        }
+        //Download Logo Image File
+        if (editData.logo && editData.logo.length > 5) {
+          data = await fetchFile(editData.logo);
+          fileObject = new File([data], editData.logo.split("/")?.[2] || editData.logo, { type: data.type });
+          setLogo(
+            Object.assign(fileObject, {
+              preview: URL.createObjectURL(fileObject),
+            })
+          );
+        }
+        //Download Franchise Aggrement File
+        if (
+          editData.franchiseAggrementFile &&
+          editData.franchiseAggrementFile.length > 5
+        ) {
+          data = await fetchFile(editData.franchiseAggrementFile);
+          fileObject = new File([data], editData.franchiseAggrementFile.split("/")?.[2] ||editData.franchiseAggrementFile, {
+            type: data.type,
+          });
+          setFranchiseAggrementFile(
+            Object.assign(fileObject, {
+              preview: URL.createObjectURL(fileObject),
+            })
+          );
+        }
+        //Download Video File
+        if (editData.video && editData.video.length > 5) {
+          data = await fetchFile(editData.video);
+          fileObject = new File([data], editData.video.split("/")?.[2] || editData.video, {
+            type: data.type,
+          });
+          setVideo(
+            Object.assign(fileObject, {
+              preview: URL.createObjectURL(fileObject),
+            })
+          );
+        }
+        //Download All Brand Images
+        if (
+          editData.brandImages &&
+          Array.isArray(editData.brandImages) &&
+          editData.brandImages.length > 0
+        ) {
+          const AllBrandImages = [];
+          for (let brandImage in editData.brandImages) {
+            data = await fetchFile(editData.brandImages[brandImage]);
+            const fileObject = new File([data], editData.brandImages[brandImage].split("/")?.[2] || editData.brandImages[brandImage], {
+              type: data.type,
+            });
+            AllBrandImages.push(fileObject);
+          }
+          setBrandImages([
+            ...AllBrandImages.map((file) =>
+              Object.assign(file, { preview: URL.createObjectURL(file) })
+            ),
+          ]);
+        }
+      } catch (error: any) {}
     }
 
     async function fakeMethod() {
@@ -466,36 +575,36 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
 
         const formDataObject = new FormData();
         let hasAnyFile = false;
-        if (brochure) {
+        if (brochure && isFilesTouched.brochure) {
           formDataObject.append("brochure", brochure as unknown as Blob);
           hasAnyFile = true;
         }
-        if (logo) {
+        if (logo && isFilesTouched.logo) {
           formDataObject.append("logo", logo as unknown as Blob);
           hasAnyFile = true;
         }
-        if (video) {
+        if (video && isFilesTouched.video) {
           formDataObject.append("video", video as unknown as Blob);
           hasAnyFile = true;
         }
-        if (franchiseAggrementFile) {
+        if (franchiseAggrementFile && isFilesTouched.franchiseAggrementFile) {
           hasAnyFile = true;
           formDataObject.append(
             "franchiseAggrementFile",
             franchiseAggrementFile as unknown as Blob
           );
+          
         }
-        if (brandImages && brandImages?.length > 0) {
+        if (
+          brandImages &&
+          brandImages?.length > 0 &&
+          isFilesTouched.brandImages
+        ) {
           brandImages.forEach((file, index) =>
             formDataObject.append(`brandImages`, file as unknown as Blob)
           );
           hasAnyFile = true;
         }
-
-        for (const [key, value] of formDataObject.entries()) {
-          console.log(`${key}:`, value);
-        }
-        console.log(otherALLData);
 
         setLoading(true);
         const endpoint = brandList.edit;
@@ -514,15 +623,19 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
         setLoading(false);
         handleClose();
       } catch (error: any) {
-        console.error("Error fetching data:", error.message);
+        console.error("Error posting data:", error.message);
         setLoading(false);
       }
     }
   };
 
+  if (loading) {
+    return <LoadingBackdrop isLoading={loading} />;
+  }
+
   return (
     <>
-      <LoadingBackdrop isLoading={loading} />
+      {/* <LoadingBackdrop isLoading={loading} /> */}
       <Grid container spacing={3}>
         <Grid item xs={12}>
           <div className="h-10 flex items-center mb-2">
@@ -1698,19 +1811,28 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
                 )}
 
                 {brochure && (
-                  <div className="file-details flex justify-between items-center w-[450px]">
-                    {renderFilePreview(brochure)}
-                    <Typography className="file-name">
-                      {brochure.name}
+                  <div>
+                    <Typography variant="h5" className="">
+                      Brochure
                     </Typography>
-                    <IconButton
-                      onClick={() => {
-                        handleRemoveFile(brochure, setBrochure);
-                        setFormErrors({ ...formErrors, brochure: "" });
-                      }}
-                    >
-                      <i className="tabler-x text-xl" />
-                    </IconButton>
+                    <div className="file-details flex justify-between items-center w-[450px]">
+                      {renderFilePreview(brochure)}
+                      <Typography className="file-name">
+                        {brochure.name}
+                      </Typography>
+                      <IconButton
+                        onClick={() => {
+                          setIsFilesTouched({
+                            ...isFilesTouched,
+                            brochure: true,
+                          });
+                          handleRemoveFile(brochure, setBrochure);
+                          setFormErrors({ ...formErrors, brochure: "" });
+                        }}
+                      >
+                        <i className="tabler-x text-xl" />
+                      </IconButton>
+                    </div>
                   </div>
                 )}
 
@@ -1740,17 +1862,23 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
                 )}
 
                 {logo && (
-                  <div className="file-details flex justify-between items-center w-[450px]">
-                    {renderFilePreview(logo)}
-                    <Typography className="file-name">{logo.name}</Typography>
-                    <IconButton
-                      onClick={() => {
-                        handleRemoveFile(logo, setLogo);
-                        setFormErrors({ ...formErrors, logo: "" });
-                      }}
-                    >
-                      <i className="tabler-x text-xl" />
-                    </IconButton>
+                  <div>
+                    <Typography variant="h5" className="">
+                      Logo
+                    </Typography>
+                    <div className="file-details flex justify-between items-center w-[450px]">
+                      {renderFilePreview(logo)}
+                      <Typography className="file-name">{logo.name}</Typography>
+                      <IconButton
+                        onClick={() => {
+                          setIsFilesTouched({ ...isFilesTouched, logo: true });
+                          handleRemoveFile(logo, setLogo);
+                          setFormErrors({ ...formErrors, logo: "" });
+                        }}
+                      >
+                        <i className="tabler-x text-xl" />
+                      </IconButton>
+                    </div>
                   </div>
                 )}
               </Grid>
@@ -1763,13 +1891,13 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
                       <i className="tabler-upload" />
                     </Avatar>
                     <Typography variant="h5" className="mbe-2.5">
-                      Drop brand images here or click to upload.
+                      Drop brand images here or click to upload. <b>({brandImages.length}/5)</b>
                     </Typography>
                     <Typography>Allowed image files</Typography>
                     <Typography>Max size 5 MB</Typography>
                   </div>
                 </div>
-                <div className="brand-images-preview">
+                <div className="brand-images-preview flex flex-col gap-y-2">
                   {brandImages.map((file) => (
                     <div
                       key={file.name}
@@ -1803,22 +1931,31 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
                 )}
 
                 {video && (
-                  <div className="file-details flex justify-between items-center w-[450px]">
-                    {renderFilePreview(video)}
-                    <Typography className="file-name">{video.name}</Typography>
-                    <IconButton
-                      onClick={() => {
-                        handleRemoveFile(video, setVideo);
-                        setFormErrors({ ...formErrors, video: "" });
-                      }}
-                    >
-                      <i className="tabler-x text-xl" />
-                    </IconButton>
+                  <div>
+                    {" "}
+                    <Typography variant="h5" className="">
+                      Video
+                    </Typography>
+                    <div className="file-details flex justify-between items-center w-[450px]">
+                      {renderFilePreview(video)}
+                      <Typography className="file-name">
+                        {video.name}
+                      </Typography>
+                      <IconButton
+                        onClick={() => {
+                          setIsFilesTouched({ ...isFilesTouched, video: true });
+                          handleRemoveFile(video, setVideo);
+                          setFormErrors({ ...formErrors, video: "" });
+                        }}
+                      >
+                        <i className="tabler-x text-xl" />
+                      </IconButton>
+                    </div>
                   </div>
                 )}
               </Grid>
               <Grid item xs={12} sm={6} className="mt-3">
-                {/* Video Dropzone */}
+                {/* Franchise Aggrement Dropzone */}
                 {!franchiseAggrementFile && (
                   <div
                     {...getFranchiseAggrementProps({ className: "dropzone" })}
@@ -1838,25 +1975,34 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
                 )}
 
                 {franchiseAggrementFile && (
-                  <div className="file-details flex justify-between items-center w-[450px]">
-                    {renderFilePreview(franchiseAggrementFile)}
-                    <Typography className="file-name">
-                      {franchiseAggrementFile.name}
+                  <div>
+                    <Typography variant="h5" className="">
+                      Franchise Aggrement File
                     </Typography>
-                    <IconButton
-                      onClick={() => {
-                        handleRemoveFile(
-                          franchiseAggrementFile,
-                          setFranchiseAggrementFile
-                        );
-                        setFormErrors({
-                          ...formErrors,
-                          franchiseAggrementFile: "",
-                        });
-                      }}
-                    >
-                      <i className="tabler-x text-xl" />
-                    </IconButton>
+                    <div className="file-details flex justify-between items-center w-[450px]">
+                      {renderFilePreview(franchiseAggrementFile)}
+                      <Typography className="file-name">
+                        {franchiseAggrementFile.name}
+                      </Typography>
+                      <IconButton
+                        onClick={() => {
+                          setIsFilesTouched({
+                            ...isFilesTouched,
+                            franchiseAggrementFile: true,
+                          });
+                          handleRemoveFile(
+                            franchiseAggrementFile,
+                            setFranchiseAggrementFile
+                          );
+                          setFormErrors({
+                            ...formErrors,
+                            franchiseAggrementFile: "",
+                          });
+                        }}
+                      >
+                        <i className="tabler-x text-xl" />
+                      </IconButton>
+                    </div>
                   </div>
                 )}
               </Grid>
@@ -1870,7 +2016,7 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
           style={{ position: "sticky", bottom: 0, zIndex: 10 }}
         >
           <Box
-            p={7}
+            p={2}
             display="flex"
             gap={2}
             justifyContent="end"
