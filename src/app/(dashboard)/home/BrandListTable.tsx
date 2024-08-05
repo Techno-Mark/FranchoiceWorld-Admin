@@ -3,7 +3,12 @@
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Card from "@mui/material/Card";
-import { MenuItem, TablePagination, TextFieldProps } from "@mui/material";
+import {
+  MenuItem,
+  TablePagination,
+  TextFieldProps,
+  Tooltip,
+} from "@mui/material";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
@@ -262,32 +267,40 @@ const BrandListTable = () => {
         header: "Actions",
         cell: ({ row }) => (
           <div className="flex items-center">
-            <IconButton
-              onClick={() => router.push(`/home/detail/${row.original.id}`)}
-            >
-              <i className="tabler-external-link text-[22px] text-textSecondary" />
-            </IconButton>
-            <IconButton
-              onClick={() => router.push(`/home/edit/${row.original.id}`)}
-            >
-              <i className="tabler-edit text-[22px] text-textSecondary" />
-            </IconButton>
-            <IconButton
-              onClick={() => {
-                setIsDeleting(true);
-                setDeletingId(row.original.id);
-              }}
-            >
-              <i className="tabler-trash text-[22px] text-textSecondary" />
-            </IconButton>
-            <IconButton
-              onClick={() => {
-                setIsSendingMail(true);
-                setSendingMailBrandId(row.original.id);
-              }}
-            >
-              <i className="tabler-send text-[22px] text-textSecondary" />
-            </IconButton>
+            <Tooltip title="View Details" placement="top">
+              <IconButton
+                onClick={() => router.push(`/home/detail/${row.original.id}`)}
+              >
+                <i className="tabler-external-link text-[22px] text-textSecondary" />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Edit Details" placement="top">
+              <IconButton
+                onClick={() => router.push(`/home/edit/${row.original.id}`)}
+              >
+                <i className="tabler-edit text-[22px] text-textSecondary" />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Delete" placement="top">
+              <IconButton
+                onClick={() => {
+                  setIsDeleting(true);
+                  setDeletingId(row.original.id);
+                }}
+              >
+                <i className="tabler-trash text-[22px] text-textSecondary" />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Send Verification Email" placement="top">
+              <IconButton
+                onClick={() => {
+                  setIsSendingMail(true);
+                  setSendingMailBrandId(row.original.id);
+                }}
+              >
+                <i className="tabler-mail text-[22px] text-textSecondary" />
+              </IconButton>
+            </Tooltip>
           </div>
         ),
         enableSorting: false,
