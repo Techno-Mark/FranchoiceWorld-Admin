@@ -9,4 +9,5 @@ export const brandList = {
   delete: `${prefix}/delete`,
   getById: `${prefix}/get`,
   getEditDataById: `${prefix}/getById`,
+  sendVerificationEmail: `${prefix}/send/verification-mail`,
 };

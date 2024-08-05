@@ -23,18 +23,14 @@ import CustomTextField from "@core/components/mui/TextField";
 import tableStyles from "@core/styles/table.module.css";
 import { post } from "@/services/apiService";
 import CustomChip from "@/@core/components/mui/Chip";
-import BreadCrumbList from "@/components/BreadCrumbList";
 import LoadingBackdrop from "@/components/LoadingBackdrop";
-import { truncateText } from "@/utils/common";
-import { contactUsType } from "@/types/apps/contactUsType";
-import { contactUs } from "@/services/endpoint/contactUs";
 import { investorListType } from "@/types/apps/investorListType";
-import { investorList } from "@/services/endpoint/investorList";
 import { brandListType } from "@/types/apps/brandListType";
 import { brandList } from "@/services/endpoint/brandList";
 import ConfirmationDialog from "./ConfirmationDialog";
 import ConfirmUpdateStatus from "./ConfirmUpdateStatus";
 import ConfirmUpdateApprove from "./ConfirmUpdateApprove";
+import ConfirmSendMailDialog from "./ConfirmSendMailDialog";
 // import ConfirmationDialog from "./ConfirmationDialog";
 
 declare module "@tanstack/table-core" {
@@ -105,6 +101,8 @@ const BrandListTable = () => {
   const [activeFilter, setActiveFilter] = useState<boolean | null>(null);
   const [deletingId, setDeletingId] = useState<number>(0);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
+  const [sendingMailBrandId, setSendingMailBrandId] = useState<number>(0);
+  const [isSendingMail, setIsSendingMail] = useState<boolean>(false);
 
   const [statusUpdatingId, setStatusUpdatingId] = useState<number>(0);
   const [isStatusUpdating, setIsStatusUpdating] = useState<boolean>(false);
@@ -281,6 +279,14 @@ const BrandListTable = () => {
               }}
             >
               <i className="tabler-trash text-[22px] text-textSecondary" />
+            </IconButton>
+            <IconButton
+              onClick={() => {
+                setIsSendingMail(true);
+                setSendingMailBrandId(row.original.id);
+              }}
+            >
+              <i className="tabler-send text-[22px] text-textSecondary" />
             </IconButton>
           </div>
         ),
@@ -482,6 +488,14 @@ const BrandListTable = () => {
             approveUpdatingId={approveUpdatingId}
             setApproveUpdatingId={setApproveUpdatingId}
             setOpen={(arg1: boolean) => setIsApproveUpdating(arg1)}
+          />
+        )}
+        {isSendingMail && (
+          <ConfirmSendMailDialog
+            open={isSendingMail}
+            sendingBrandId={sendingMailBrandId}
+            setsendingBrandId={setSendingMailBrandId}
+            setOpen={(arg1: boolean) => setIsSendingMail(arg1)}
           />
         )}
       </div>
