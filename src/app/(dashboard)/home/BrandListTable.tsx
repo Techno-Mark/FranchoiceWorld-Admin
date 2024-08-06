@@ -356,12 +356,12 @@ const BrandListTable = () => {
             </div>
           </div>
           <div className="flex flex-col sm:flex-row is-full sm:is-auto items-start sm:items-center gap-4">
-            <DebouncedInput
+            {/* <DebouncedInput
               value={globalFilter ?? ""}
               onChange={(value) => setGlobalFilter(String(value))}
               placeholder="Search"
               className="is-full sm:is-auto"
-            />
+            /> */}
             <div className="flex flex-col sm:flex-row is-full sm:is-auto items-start sm:items-center gap-4">
               <Typography>Status:</Typography>
               <CustomTextField
