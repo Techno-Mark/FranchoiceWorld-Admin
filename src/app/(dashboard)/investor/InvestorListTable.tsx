@@ -38,6 +38,7 @@ import { investorList } from "@/services/endpoint/investorList";
 import ConfirmationDialog from "./ConfirmationDialog";
 import ConfirmUpdateStatus from "./ConfirmUpdateStatus";
 import ConfirmUpdateApprove from "./ConfirmUpdateApprove";
+import trimText from "@/services/trimText";
 // import ConfirmationDialog from "./ConfirmationDialog";
 
 declare module "@tanstack/table-core" {
@@ -176,7 +177,7 @@ const InvestorListTable = () => {
         header: "Full Name",
         cell: ({ row }) => (
           <Typography color="text.primary" className="font-medium">
-            {row.original.fullName}
+            {trimText(row.original.fullName)}
           </Typography>
         ),
       }),
@@ -184,7 +185,7 @@ const InvestorListTable = () => {
         header: "email",
         cell: ({ row }) => (
           <Typography color="text.primary" className="font-medium">
-            {row.original.email}
+            {trimText(row.original.email)}
           </Typography>
         ),
         enableSorting: true,
@@ -193,7 +194,9 @@ const InvestorListTable = () => {
         header: "Phone Number",
         cell: ({ row }) => (
           <Typography color="text.primary" className="font-medium">
-            {row.original.countryCode + " " + row.original.phoneNumber}
+            {trimText(
+              row.original.countryCode + " " + row.original.phoneNumber
+            )}
           </Typography>
         ),
         enableSorting: true,
@@ -203,7 +206,7 @@ const InvestorListTable = () => {
         header: "industry",
         cell: ({ row }) => (
           <Typography color="text.primary" className="font-medium">
-            {row.original.industryType}
+            {trimText(row.original.industryType)}
           </Typography>
         ),
         enableSorting: false,
@@ -212,7 +215,7 @@ const InvestorListTable = () => {
         header: "Investment Range",
         cell: ({ row }) => (
           <Typography color="text.primary" className="font-medium">
-            {row.original.investmentRange}
+            {trimText(row.original.investmentRange)}
           </Typography>
         ),
       }),

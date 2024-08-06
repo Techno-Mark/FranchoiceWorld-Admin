@@ -472,7 +472,11 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
         // Download Brochure File
         if (editData.brochure && editData.brochure.length > 5) {
           data = await fetchFile(editData.brochure);
-          fileObject = new File([data], editData.brochure.split("/")?.[2] || editData.brochure, { type: data.type });
+          fileObject = new File(
+            [data],
+            editData.brochure.split("/")?.[2] || editData.brochure,
+            { type: data.type }
+          );
           setBrochure(
             Object.assign(fileObject, {
               preview: URL.createObjectURL(fileObject),
@@ -482,7 +486,11 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
         //Download Logo Image File
         if (editData.logo && editData.logo.length > 5) {
           data = await fetchFile(editData.logo);
-          fileObject = new File([data], editData.logo.split("/")?.[2] || editData.logo, { type: data.type });
+          fileObject = new File(
+            [data],
+            editData.logo.split("/")?.[2] || editData.logo,
+            { type: data.type }
+          );
           setLogo(
             Object.assign(fileObject, {
               preview: URL.createObjectURL(fileObject),
@@ -495,9 +503,14 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
           editData.franchiseAggrementFile.length > 5
         ) {
           data = await fetchFile(editData.franchiseAggrementFile);
-          fileObject = new File([data], editData.franchiseAggrementFile.split("/")?.[2] ||editData.franchiseAggrementFile, {
-            type: data.type,
-          });
+          fileObject = new File(
+            [data],
+            editData.franchiseAggrementFile.split("/")?.[2] ||
+              editData.franchiseAggrementFile,
+            {
+              type: data.type,
+            }
+          );
           setFranchiseAggrementFile(
             Object.assign(fileObject, {
               preview: URL.createObjectURL(fileObject),
@@ -507,9 +520,13 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
         //Download Video File
         if (editData.video && editData.video.length > 5) {
           data = await fetchFile(editData.video);
-          fileObject = new File([data], editData.video.split("/")?.[2] || editData.video, {
-            type: data.type,
-          });
+          fileObject = new File(
+            [data],
+            editData.video.split("/")?.[2] || editData.video,
+            {
+              type: data.type,
+            }
+          );
           setVideo(
             Object.assign(fileObject, {
               preview: URL.createObjectURL(fileObject),
@@ -525,9 +542,14 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
           const AllBrandImages = [];
           for (let brandImage in editData.brandImages) {
             data = await fetchFile(editData.brandImages[brandImage]);
-            const fileObject = new File([data], editData.brandImages[brandImage].split("/")?.[2] || editData.brandImages[brandImage], {
-              type: data.type,
-            });
+            const fileObject = new File(
+              [data],
+              editData.brandImages[brandImage].split("/")?.[2] ||
+                editData.brandImages[brandImage],
+              {
+                type: data.type,
+              }
+            );
             AllBrandImages.push(fileObject);
           }
           setBrandImages([
@@ -593,7 +615,6 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
             "franchiseAggrementFile",
             franchiseAggrementFile as unknown as Blob
           );
-          
         }
         if (
           brandImages &&
@@ -1248,7 +1269,11 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
                   state.map((c) => (
                     <MenuItem key={c.id} value={c.id}>
                       <Checkbox
-                        checked={formData.state?.includes(c.id) || false}
+                        checked={
+                          Array.isArray(formData.state)
+                            ? formData.state?.includes(c.id)
+                            : false
+                        }
                       />
                       <ListItemText primary={c.name} />
                     </MenuItem>
@@ -1294,7 +1319,11 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
                   allCity.map((c) => (
                     <MenuItem key={c.id} value={c.id}>
                       <Checkbox
-                        checked={formData.city?.includes(c.id) || false}
+                        checked={
+                          Array.isArray(formData.city)
+                            ? formData.city?.includes(c.id)
+                            : false
+                        }
                       />
                       <ListItemText primary={c.name} />
                     </MenuItem>
@@ -1436,7 +1465,9 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
                       <MenuItem key={c.id} value={c.id}>
                         <Checkbox
                           checked={
-                            formData.salesRevenueModel?.includes(c.id) || false
+                            Array.isArray(formData.salesRevenueModel)
+                              ? formData.salesRevenueModel?.includes(c.id)
+                              : false
                           }
                         />
                         <ListItemText primary={c.name} />
@@ -1492,7 +1523,9 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
                       <MenuItem key={c.id} value={c.id}>
                         <Checkbox
                           checked={
-                            formData.supportProvided?.includes(c.id) || false
+                            Array.isArray(formData.supportProvided)
+                              ? formData.supportProvided?.includes(c.id)
+                              : false
                           }
                         />
                         <ListItemText primary={c.name} />
@@ -1891,7 +1924,8 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
                       <i className="tabler-upload" />
                     </Avatar>
                     <Typography variant="h5" className="mbe-2.5">
-                      Drop brand images here or click to upload. <b>({brandImages.length}/5)</b>
+                      Drop brand images here or click to upload.{" "}
+                      <b>({brandImages.length}/5)</b>
                     </Typography>
                     <Typography>Allowed image files</Typography>
                     <Typography>Max size 5 MB</Typography>

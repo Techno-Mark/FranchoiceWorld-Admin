@@ -36,6 +36,7 @@ import ConfirmationDialog from "./ConfirmationDialog";
 import ConfirmUpdateStatus from "./ConfirmUpdateStatus";
 import ConfirmUpdateApprove from "./ConfirmUpdateApprove";
 import ConfirmSendMailDialog from "./ConfirmSendMailDialog";
+import trimText from "@/services/trimText";
 // import ConfirmationDialog from "./ConfirmationDialog";
 
 declare module "@tanstack/table-core" {
@@ -168,7 +169,7 @@ const BrandListTable = () => {
         header: "Brand Name",
         cell: ({ row }) => (
           <Typography color="text.primary" className="font-medium">
-            {row.original.brandName}
+            {trimText(row.original.brandName)}
           </Typography>
         ),
       }),
@@ -176,7 +177,7 @@ const BrandListTable = () => {
         header: "Sub Category",
         cell: ({ row }) => (
           <Typography color="text.primary" className="font-medium">
-            {row.original.subCategory}
+            {trimText(row.original.subCategory)}
           </Typography>
         ),
         enableSorting: true,
@@ -195,7 +196,7 @@ const BrandListTable = () => {
         header: "Investment Range",
         cell: ({ row }) => (
           <Typography color="text.primary" className="font-medium">
-            {row.original.investmentRange}
+            {trimText(row.original.investmentRange)}
           </Typography>
         ),
         enableSorting: false,
@@ -204,7 +205,7 @@ const BrandListTable = () => {
         header: "Locations",
         cell: ({ row }) => (
           <Typography color="text.primary" className="font-medium">
-            {row.original.numberOfLocations}
+            {trimText(row.original.numberOfLocations)}
           </Typography>
         ),
       }),
@@ -212,7 +213,7 @@ const BrandListTable = () => {
         header: "area",
         cell: ({ row }) => (
           <Typography color="text.primary" className="font-medium">
-            {row.original.areaaRequired}
+            {trimText(row.original.areaaRequired)}
           </Typography>
         ),
       }),

@@ -34,6 +34,7 @@ import LoadingBackdrop from "@/components/LoadingBackdrop";
 import { truncateText } from "@/utils/common";
 import { contactUsType } from "@/types/apps/contactUsType";
 import { contactUs } from "@/services/endpoint/contactUs";
+import trimText from "@/services/trimText";
 // import ConfirmationDialog from "./ConfirmationDialog";
 
 declare module "@tanstack/table-core" {
@@ -141,7 +142,7 @@ const ContactUsListTable = () => {
         header: "Full Name",
         cell: ({ row }) => (
           <Typography color="text.primary" className="font-medium">
-            {row.original.fullName}
+            {trimText(row.original.fullName)}
           </Typography>
         ),
       }),
@@ -149,7 +150,7 @@ const ContactUsListTable = () => {
         header: "Company Name",
         cell: ({ row }) => (
           <Typography color="text.primary" className="font-medium">
-            {row.original.companyName}
+            {trimText(row.original.companyName)}
           </Typography>
         ),
         enableSorting: true,
@@ -158,7 +159,7 @@ const ContactUsListTable = () => {
         header: "email",
         cell: ({ row }) => (
           <Typography color="text.primary" className="font-medium">
-            {row.original.emailId}
+            {trimText(row.original.emailId)}
           </Typography>
         ),
         enableSorting: true,
@@ -167,7 +168,7 @@ const ContactUsListTable = () => {
         header: "Phone Number",
         cell: ({ row }) => (
           <Typography color="text.primary" className="font-medium">
-            {row.original.phoneNumber}
+            {trimText(row.original.phoneNumber)}
           </Typography>
         ),
         enableSorting: true,
@@ -176,7 +177,7 @@ const ContactUsListTable = () => {
         header: "Page From",
         cell: ({ row }) => (
           <Typography color="text.primary" className="font-medium">
-            {row.original.pageFrom}
+            {trimText(row.original.pageFrom)}
           </Typography>
         ),
       }),
@@ -184,9 +185,7 @@ const ContactUsListTable = () => {
         header: "Other Information",
         cell: ({ row }) => (
           <Typography color="text.primary" className="font-medium">
-            {row.original.otherInformation.length > 60
-              ? row.original.otherInformation.slice(0, 60) + "..."
-              : row.original.otherInformation}
+            {trimText(row.original.otherInformation)}
           </Typography>
         ),
         enableSorting: false,
