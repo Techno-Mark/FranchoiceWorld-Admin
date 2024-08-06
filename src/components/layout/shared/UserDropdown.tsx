@@ -147,7 +147,7 @@ const UserDropdown = () => {
                         {session?.user?.name || ""}
                       </Typography>
                       <Typography variant="caption">
-                        {session?.user?.email || ""}
+                        {userName || ""}
                       </Typography>
                     </div>
                   </div>
