@@ -1,17 +1,7 @@
-import {
-  Card,
-  Typography,
-  Grid,
-  TableCell,
-  TableHead,
-  TableContainer,
-  TableRow,
-  Tooltip,
-  IconButton,
-  Table,
-} from "@mui/material";
+import { Card, Typography, Grid, Button } from "@mui/material";
 import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
+import { useRouter } from "next/navigation";
 import React from "react";
 
 type pageProps = {
@@ -19,8 +9,17 @@ type pageProps = {
 };
 
 function InvestorDetail({ investorDetail: data }: pageProps) {
+  const router = useRouter();
   return (
     <Grid container spacing={6} alignItems={"flex-start"}>
+      <Grid item xs={12} sm={12} className="mt-3">
+        <button
+          className="bg-[#17498a] text-white font-semibold py-2 px-4 mx-2 cursor-pointer rounded-lg shadow-md hover:bg-[#1d4981] transition-colors duration-300"
+          onClick={() => router.push("/investor")}
+        >
+          Back
+        </button>
+      </Grid>
       <Grid
         item
         xs={12}

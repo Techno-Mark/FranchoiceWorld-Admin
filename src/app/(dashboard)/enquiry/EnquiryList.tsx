@@ -3,14 +3,8 @@
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Card from "@mui/material/Card";
-import {
-  MenuItem,
-  TablePagination,
-  TextFieldProps,
-  Tooltip,
-} from "@mui/material";
+import { TablePagination, TextFieldProps } from "@mui/material";
 import Typography from "@mui/material/Typography";
-import IconButton from "@mui/material/IconButton";
 import classnames from "classnames";
 import { RankingInfo, rankItem } from "@tanstack/match-sorter-utils";
 import {
@@ -26,14 +20,11 @@ import type { ColumnDef, FilterFn } from "@tanstack/react-table";
 import CustomTextField from "@core/components/mui/TextField";
 import tableStyles from "@core/styles/table.module.css";
 import { post } from "@/services/apiService";
-import CustomChip from "@/@core/components/mui/Chip";
 import LoadingBackdrop from "@/components/LoadingBackdrop";
-import { investorListType } from "@/types/apps/investorListType";
-import { investorList } from "@/services/endpoint/investorList";
-import ConfirmationDialog from "./ConfirmationDialog";
-import ConfirmUpdateStatus from "./ConfirmUpdateStatus";
-import ConfirmUpdateApprove from "./ConfirmUpdateApprove";
 import trimText from "@/services/trimText";
+import { inquiryType } from "@/types/apps/InquiryType";
+import { inquiry } from "@/services/endpoint/inquiry";
+import mapWhoAmI from "@/services/whoAmIMapping";
 // import ConfirmationDialog from "./ConfirmationDialog";
 
 declare module "@tanstack/table-core" {
@@ -45,8 +36,8 @@ declare module "@tanstack/table-core" {
   }
 }
 
-type InvestorTypeWithAction = investorListType & {
-  action?: string;
+type EventTypeWithAction = inquiryType & {
+  // action?: string;
 };
 
 const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
@@ -87,15 +78,15 @@ const DebouncedInput = ({
   );
 };
 
-const columnHelper = createColumnHelper<InvestorTypeWithAction>();
+const columnHelper = createColumnHelper<EventTypeWithAction>();
 
-const InvestorListTable = () => {
+const EnquiryList = () => {
   const [rowSelection, setRowSelection] = useState({});
   const [globalFilter, setGlobalFilter] = useState("");
 
   const router = useRouter();
 
-  const [data, setData] = useState<investorListType[]>([]);
+  const [data, setData] = useState<inquiryType[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState<number>(0);
@@ -105,59 +96,28 @@ const InvestorListTable = () => {
   const [deletingId, setDeletingId] = useState<number>(0);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
 
-  const [statusUpdatingId, setStatusUpdatingId] = useState<number>(0);
-  const [isStatusUpdating, setIsStatusUpdating] = useState<boolean>(false);
-  const [approveUpdatingId, setApproveUpdatingId] = useState<number>(0);
-  const [isApproveUpdating, setIsApproveUpdating] = useState<boolean>(false);
-  const [changeStatusValue, setChangeStatusValue] = useState(false);
-
-  const getData = async () => {
-    setLoading(true);
-    try {
-      const result = await post(investorList.list, {
-        page: page + 1,
-        limit: pageSize,
-        search: globalFilter,
-        active: activeFilter,
-      });
-      setData(result.ResponseData.investorLists);
-      setTotalRows(result.ResponseData.totalRecords);
-    } catch (error: any) {
-      setError(error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    const getData = async () => {
+      setLoading(true);
+      try {
+        const result = await post(inquiry.list, {
+          page: page + 1,
+          limit: pageSize,
+          search: globalFilter,
+          active: activeFilter,
+        });
+        setData(result.ResponseData.inquiryLists);
+        setTotalRows(result.ResponseData.totalRecords);
+      } catch (error: any) {
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
     getData();
-  }, [
-    page,
-    pageSize,
-    globalFilter,
-    // deletingId,
-    activeFilter,
-    // statusUpdatingId,
-    // approveUpdatingId,
-  ]);
+  }, [page, pageSize, globalFilter, deletingId, activeFilter]);
 
-  useEffect(() => {
-    if (statusUpdatingId == -1) {
-      getData();
-    }
-  }, [statusUpdatingId]);
-  useEffect(() => {
-    if (approveUpdatingId == -1) {
-      getData();
-    }
-  }, [approveUpdatingId]);
-  useEffect(() => {
-    if (deletingId == -1) {
-      getData();
-    }
-  }, [deletingId]);
-
-  const columns = useMemo<ColumnDef<InvestorTypeWithAction, any>[]>(
+  const columns = useMemo<ColumnDef<EventTypeWithAction, any>[]>(
     () => [
       columnHelper.accessor("srNo", {
         header: "Sr. No.",
@@ -196,95 +156,20 @@ const InvestorListTable = () => {
         ),
         enableSorting: true,
       }),
-
-      columnHelper.accessor("industryType", {
-        header: "industry",
+      columnHelper.accessor("city", {
+        header: "City",
         cell: ({ row }) => (
           <Typography color="text.primary" className="font-medium">
-            {trimText(row.original.industryType)}
-          </Typography>
-        ),
-        enableSorting: false,
-      }),
-      columnHelper.accessor("investmentRange", {
-        header: "Investment Range",
-        cell: ({ row }) => (
-          <Typography color="text.primary" className="font-medium">
-            {trimText(row.original.investmentRange)}
+            {trimText(row.original.city)}
           </Typography>
         ),
       }),
-
-      columnHelper.accessor("active", {
-        header: "Status",
+      columnHelper.accessor("whoAmI", {
+        header: "Who am I",
         cell: ({ row }) => (
-          <div className="flex items-center">
-            <CustomChip
-              className={`${row.original.approved ? "cursor-pointer" : "cursor-not-allowed"}`}
-              size="small"
-              round="true"
-              label={row.original.active ? "Active" : "Inactive"}
-              variant="tonal"
-              color={row.original.active ? "success" : "warning"}
-              onClick={() => {
-                if (row.original.approved) {
-                  setChangeStatusValue(row.original.active);
-                  setIsStatusUpdating(true);
-                  setStatusUpdatingId(row.original.id);
-                }
-              }}
-            />
-          </div>
-        ),
-        enableSorting: false,
-      }),
-
-      columnHelper.accessor("approved", {
-        header: "Approve",
-        cell: ({ row }) => (
-          <div className="flex items-center">
-            <CustomChip
-              className="cursor-pointer"
-              size="small"
-              round="true"
-              label={row.original.approved ? "Approved" : "Rejected"}
-              variant="tonal"
-              color={row.original.approved ? "success" : "error"}
-              onClick={() => {
-                setChangeStatusValue(row.original.approved);
-                setIsApproveUpdating(true);
-                setApproveUpdatingId(row.original.id);
-              }}
-            />
-          </div>
-        ),
-        enableSorting: false,
-      }),
-
-      columnHelper.accessor("id", {
-        header: "Actions",
-        cell: ({ row }) => (
-          <div className="flex items-center">
-            <Tooltip title="View Details" placement="top">
-              <IconButton
-                onClick={() =>
-                  router.push(`/investor/detail/${row.original.id}`)
-                }
-              >
-                <i className="tabler-external-link text-[22px] text-textSecondary" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Delete" placement="top">
-              <IconButton
-                onClick={() => {
-                  setIsDeleting(true);
-                  setDeletingId(row.original.id);
-                }}
-              >
-                <i className="tabler-trash text-[22px] text-textSecondary" />
-              </IconButton>
-            </Tooltip>
-          </div>
+          <Typography color="text.primary" className="font-medium">
+            {mapWhoAmI(row.original.whoAmI)}
+          </Typography>
         ),
         enableSorting: false,
       }),
@@ -329,21 +214,21 @@ const InvestorListTable = () => {
     <>
       <div className="max-h-[75vh]">
         <LoadingBackdrop isLoading={loading} />
-        <div className="flex justify-between flex-col items-start md:flex-row md:items-center py-2 gap-4">
+        <div className="flex justify-between flex-col items-start md:flex-row md:items-center gap-4">
           <div className="h-10 flex items-center">
             <div>
               <Typography variant="h5" className={`capitalize cursor-pointer`}>
-                &nbsp; Investor List &nbsp;
+                &nbsp; Enquiry List &nbsp;
               </Typography>
             </div>
           </div>
-          <div className="flex flex-col sm:flex-row is-full sm:is-auto items-start sm:items-center gap-4">
-            {/* <DebouncedInput
+          {/* <div className="flex flex-col sm:flex-row is-full sm:is-auto items-start sm:items-center gap-4">
+            <DebouncedInput
               value={globalFilter ?? ""}
               onChange={(value) => setGlobalFilter(String(value))}
               placeholder="Search"
               className="is-full sm:is-auto"
-            /> */}
+            />
             <div className="flex flex-col sm:flex-row is-full sm:is-auto items-start sm:items-center gap-4">
               <Typography>Status:</Typography>
               <CustomTextField
@@ -370,22 +255,22 @@ const InvestorListTable = () => {
                 }}
               >
                 <MenuItem value="all">All</MenuItem>
-                <MenuItem value="active">Active</MenuItem>
-                <MenuItem value="inactive">Inactive</MenuItem>
+                <MenuItem value="active">Publish</MenuItem>
+                <MenuItem value="inactive">Draft</MenuItem>
               </CustomTextField>
             </div>
-            {/* <Button
+            <Button
               variant="contained"
               startIcon={<i className="tabler-plus" />}
               onClick={() => router.push("/content-management/events/add")}
               className="is-full sm:is-auto"
             >
               Add Event
-            </Button> */}
-          </div>
+            </Button>
+          </div> */}
         </div>
         <Card className="flex flex-col h-full">
-          <div className="overflow-x-auto sm:h-[380px] md:h-[400px] lg:h-[460px]">
+          <div className="overflow-x-auto sm:h-[380px] md:h-[400px] lg:h-[475px]">
             <table className={tableStyles.table}>
               <thead className="">
                 {table.getHeaderGroups().map((headerGroup) => (
@@ -462,33 +347,15 @@ const InvestorListTable = () => {
             onRowsPerPageChange={handleRowsPerPageChange}
           />
         </Card>
-        <ConfirmationDialog
+        {/* <ConfirmationDialog
           open={isDeleting}
           deletingId={deletingId}
           setDeletingId={setDeletingId}
           setOpen={(arg1: boolean) => setIsDeleting(arg1)}
-        />
-        {isStatusUpdating && (
-          <ConfirmUpdateStatus
-            statusValue={changeStatusValue}
-            open={isStatusUpdating}
-            statusUpdatingId={statusUpdatingId}
-            setStatusUpdatingId={setStatusUpdatingId}
-            setOpen={(arg1: boolean) => setIsStatusUpdating(arg1)}
-          />
-        )}
-        {isApproveUpdating && (
-          <ConfirmUpdateApprove
-            statusValue={changeStatusValue}
-            open={isApproveUpdating}
-            approveUpdatingId={approveUpdatingId}
-            setApproveUpdatingId={setApproveUpdatingId}
-            setOpen={(arg1: boolean) => setIsApproveUpdating(arg1)}
-          />
-        )}
+        /> */}
       </div>
     </>
   );
 };
 
-export default InvestorListTable;
+export default EnquiryList;

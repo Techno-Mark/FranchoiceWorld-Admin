@@ -90,3 +90,26 @@ export const del = (endpoint: string) =>
   fetchData(endpoint, {
     method: "DELETE",
   });
+
+export const postFormData = async (endpoint: string, formData: any) => {
+  try {
+    const session = await getSession();
+
+    if (!session || !session?.user) {
+      throw new Error("No session or access token found");
+    }
+
+    const response = await fetch(`${API_URL}/${endpoint}`, {
+      method: "POST",
+      body: formData,
+      headers: {
+        Authorization: `Bearer ${session?.user.token}`,
+      },
+    });
+    return await handleResponse(response);
+  } catch (error: any) {
+    console.error("Error fetching data:", error);
+    // toast.error(error.message);
+    throw error;
+  }
+};

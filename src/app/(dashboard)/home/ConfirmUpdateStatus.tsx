@@ -3,13 +3,8 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
-import { investorList } from "@/services/endpoint/investorList";
 import { toast } from "react-toastify";
 import { post } from "@/services/apiService";
-import CustomTextField from "@/@core/components/mui/TextField";
-import { MenuItem } from "@mui/material";
-import { useState } from "react";
-import { boolean } from "valibot";
 import { brandList } from "@/services/endpoint/brandList";
 
 type ConfirmationDialogProps = {
@@ -50,8 +45,8 @@ const ConfirmUpdateStatus = ({
     <Dialog fullWidth maxWidth="xs" open={open} onClose={() => setOpen(false)}>
       <DialogContent className="flex items-center flex-col text-center sm:pbs-16 sm:pbe-6 sm:pli-16">
         <Typography variant="h5" className="py-4">
-          Are you sure you want to update{" "}
-          {`${statusValue ? "Active" : "Inactive"}`} status?
+          Are you sure you want to{" "}
+          <b>{`${statusValue ? "Inactive" : "Active"}`}</b> this Brand ?
         </Typography>
       </DialogContent>
       <DialogActions className="justify-center pbs-0 sm:pbe-16 sm:pli-16">

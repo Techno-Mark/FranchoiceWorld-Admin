@@ -1,7 +1,8 @@
-import { Card, Typography, Grid } from "@mui/material";
+import { Card, Typography, Grid, Button } from "@mui/material";
 import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import React from "react";
 
 type pageProps = {
@@ -9,9 +10,18 @@ type pageProps = {
 };
 
 function BrandDetail({ brandDetails: data }: pageProps) {
-  console.log(data.salesRevenueModel?.length);
+  const router = useRouter();
   return (
     <Grid container spacing={6} alignItems={"flex-start"}>
+      <Grid item xs={12} sm={12} className="mt-3">
+        <button
+          className="bg-[#17498a] text-white font-semibold py-2 px-4 mx-2 cursor-pointer rounded-lg shadow-md hover:bg-[#1d4981] transition-colors duration-300"
+          onClick={() => router.push("/home")}
+        >
+          Back
+        </button>
+      </Grid>
+
       <Grid
         item
         xs={12}
@@ -54,9 +64,9 @@ function BrandDetail({ brandDetails: data }: pageProps) {
               <div className="flex items-center space-x-2">
                 <Typography variant="h6" className="w-32">
                   {" "}
-                  Company Name:{" "}
+                  Brand Name:{" "}
                 </Typography>
-                <Typography>{data.companyName || "NA"} </Typography>
+                <Typography>{data.brandName || "NA"} </Typography>
               </div>
               <div className="flex items-center space-x-2">
                 <Typography variant="h6" className="w-32">
@@ -65,212 +75,41 @@ function BrandDetail({ brandDetails: data }: pageProps) {
                 </Typography>
                 <Typography>{data.websiteURL || "NA"} </Typography>
               </div>
+              <div className="flex items-center space-x-2">
+                <Typography variant="h6" className="w-32">
+                  {" "}
+                  Country:{" "}
+                </Typography>
+                <Typography>
+                  {data.countryAssociation?.name || "NA"}{" "}
+                </Typography>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Typography variant="h6" className="w-32">
+                  {" "}
+                  State:{" "}
+                </Typography>
+                <Typography>
+                  {data.userStateAssociation?.name || "NA"}{" "}
+                </Typography>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Typography variant="h6" className="w-32">
+                  {" "}
+                  City:{" "}
+                </Typography>
+                <Typography>
+                  {data.userCityAssociation?.name || "NA"}{" "}
+                </Typography>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Typography variant="h6" className="w-32">
+                  {" "}
+                  Pincode:{" "}
+                </Typography>
+                <Typography>{data.pincode || "NA"} </Typography>
+              </div>
             </div>
-          </Card>
-        </Grid>
-        <Grid item xs={12} md={11}>
-          <Card className="p-2">
-            <Typography variant="h5" className="underline">
-              {" "}
-              Franchise Details:{" "}
-            </Typography>
-            <table className="p-2">
-              <tr>
-                <td className="w-32">
-                  <Typography variant="h6" className="w-40">
-                    Franchise Fee:{" "}
-                  </Typography>
-                </td>
-                <td>
-                  <Typography>{data.franchiseFee || "NA"} </Typography>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <Typography variant="h6">
-                    {" "}
-                    Sales and Revenue Model:{" "}
-                  </Typography>
-                </td>
-                <td>
-                  <Typography>
-                    {data.salesRevenueModel &&
-                    Array.isArray(data.salesRevenueModel) &&
-                    data.salesRevenueModel.length > 0
-                      ? data.salesRevenueModel.join(", ")
-                      : "NA"}
-                  </Typography>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <Typography variant="h6" className="w-40">
-                    {" "}
-                    ROI:{" "}
-                  </Typography>
-                </td>
-                <td>
-                  <Typography>{data.roi || "NA"}</Typography>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <Typography variant="h6" className="w-40">
-                    {" "}
-                    Payback Period:{" "}
-                  </Typography>
-                </td>
-                <td>
-                  <Typography>
-                    {data.paybackPeriodAssociation?.name || "NA"}{" "}
-                  </Typography>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <Typography variant="h6" className="w-40">
-                    {" "}
-                    Tenure Period:{" "}
-                  </Typography>
-                </td>
-                <td>
-                  <Typography>
-                    {data.tenurePeriodAssociation?.name || "NA"}{" "}
-                  </Typography>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <Typography variant="h6"> Support Provided: </Typography>
-                </td>
-                <td>
-                  <Typography>
-                    {data.supportProvided &&
-                    Array.isArray(data.supportProvided) &&
-                    data.supportProvided.length > 0
-                      ? data.supportProvided.join(", ")
-                      : " NA"}
-                  </Typography>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <Typography variant="h6" className="w-40">
-                    {" "}
-                    Other Applicable:{" "}
-                  </Typography>
-                </td>
-                <td>
-                  <Typography>{data.otherApplicable || "NA"} </Typography>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <Typography variant="h6" className="w-40">
-                    {" "}
-                    Is Operating Manuals:{" "}
-                  </Typography>
-                </td>
-                <td>
-                  <Typography>
-                    {data.isOperatingManuals?.toString() || "NA"}{" "}
-                  </Typography>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <Typography variant="h6" className="w-40">
-                    {" "}
-                    Is Assistance Available:{" "}
-                  </Typography>
-                </td>
-                <td>
-                  <Typography>
-                    {data.isAssistanceAvailable?.toString() || "NA"}{" "}
-                  </Typography>
-                </td>
-              </tr>
-
-              <tr>
-                <td>
-                  <Typography variant="h6" className="w-40">
-                    {" "}
-                    Is Expert Guidance:{" "}
-                  </Typography>
-                </td>
-                <td>
-                  <Typography>
-                    {data.isExpertGuidance?.toString() || "NA"}{" "}
-                  </Typography>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <Typography variant="h6" className="w-40">
-                    {" "}
-                    Is IT System Included:{" "}
-                  </Typography>
-                </td>
-                <td>
-                  <Typography>
-                    {data.isITSystemIncluded?.toString() || "NA"}{" "}
-                  </Typography>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <Typography variant="h6" className="w-40">
-                    {" "}
-                    Number of Locations{" "}
-                  </Typography>
-                </td>
-                <td>
-                  <Typography>
-                    {data.OutletAssociation?.name || "NA"}{" "}
-                  </Typography>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <Typography variant="h6" className="w-40">
-                    Description{" "}
-                  </Typography>
-                </td>
-                <td>
-                  <Typography>{data.brandDescription || "NA"} </Typography>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <Typography variant="h6" className="w-40">
-                    USP{" "}
-                  </Typography>
-                </td>
-                <td>
-                  <Typography>{data.usp || "NA"} </Typography>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <Typography variant="h6">Area Required </Typography>
-                </td>
-                <td>
-                  <Typography>
-                    {data.areaRequiredAssociation?.name || "NA"}{" "}
-                  </Typography>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <Typography variant="h6">Investment Range </Typography>
-                </td>
-                <td>
-                  <Typography>
-                    {data.investmentRangeAssociation?.range || "NA"}{" "}
-                  </Typography>
-                </td>
-              </tr>
-            </table>
           </Card>
         </Grid>
         <Grid item xs={12} sm={11}>
@@ -281,11 +120,11 @@ function BrandDetail({ brandDetails: data }: pageProps) {
             </Typography>
             <table className="p-2">
               <tr>
-                <td className="w-40">
-                  <Typography variant="h6"> Brand Name: </Typography>
+                <td className="w-60">
+                  <Typography variant="h6"> Company Name: </Typography>
                 </td>
                 <td>
-                  <Typography>{data.brandName || "NA"} </Typography>
+                  <Typography>{data.companyName || "NA"} </Typography>
                 </td>
               </tr>
               <tr>
@@ -349,6 +188,260 @@ function BrandDetail({ brandDetails: data }: pageProps) {
                 <td>
                   <Typography>
                     {data.headquartersLocationAssociation?.name || "NA"}{" "}
+                  </Typography>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <Typography variant="h6" className="w-60">
+                    {" "}
+                    Current Number of Locations{" "}
+                  </Typography>
+                </td>
+                <td>
+                  <Typography>
+                    {data.OutletAssociation?.name || "NA"}{" "}
+                  </Typography>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <Typography variant="h6" className="w-60">
+                    Description{" "}
+                  </Typography>
+                </td>
+                <td>
+                  <Typography>{data.brandDescription || "NA"} </Typography>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <Typography variant="h6" className="w-60">
+                    USP{" "}
+                  </Typography>
+                </td>
+                <td>
+                  <Typography>{data.usp || "NA"} </Typography>
+                </td>
+              </tr>
+            </table>
+          </Card>
+        </Grid>
+        <Grid item xs={12} md={11}>
+          <Card className="p-2">
+            <Typography variant="h5" className="underline">
+              {" "}
+              Investment Details:{" "}
+            </Typography>
+            <table className="p-2">
+              <tr>
+                <td>
+                  <Typography variant="h6">Area Required </Typography>
+                </td>
+                <td>
+                  <Typography>
+                    {data.areaRequiredAssociation?.name || "NA"}{" "}
+                  </Typography>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <Typography variant="h6">Investment Range </Typography>
+                </td>
+                <td>
+                  <Typography>
+                    {data.investmentRangeAssociation?.range || "NA"}{" "}
+                  </Typography>
+                </td>
+              </tr>
+              <tr>
+                <td className="w-32">
+                  <Typography variant="h6" className="w-60">
+                    Franchise Fee:{" "}
+                  </Typography>
+                </td>
+                <td>
+                  <Typography>{data.franchiseFee || "NA"} </Typography>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <Typography variant="h6">
+                    {" "}
+                    Sales and Revenue Model:{" "}
+                  </Typography>
+                </td>
+                <td>
+                  <Typography>
+                    {data.salesRevenueModel &&
+                    Array.isArray(data.salesRevenueModel) &&
+                    data.salesRevenueModel.length > 0
+                      ? data.salesRevenueModel.join(", ")
+                      : "NA"}
+                  </Typography>
+                </td>
+              </tr>
+              {/* <tr>
+                <td>
+                  <Typography variant="h6" className="w-60">
+                    {" "}
+                    ROI:{" "}
+                  </Typography>
+                </td>
+                <td>
+                  <Typography>{data.roi || "NA"}</Typography>
+                </td>
+              </tr> */}
+              <tr>
+                <td>
+                  <Typography variant="h6" className="w-60">
+                    {" "}
+                    Payback Period:{" "}
+                  </Typography>
+                </td>
+                <td>
+                  <Typography>
+                    {data.paybackPeriodAssociation?.name || "NA"}{" "}
+                  </Typography>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <Typography variant="h6" className="w-60">
+                    {" "}
+                    Tenure Period:{" "}
+                  </Typography>
+                </td>
+                <td>
+                  <Typography>
+                    {data.tenurePeriodAssociation?.name || "NA"}{" "}
+                  </Typography>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <Typography variant="h6"> Support Provided: </Typography>
+                </td>
+                <td>
+                  <Typography>
+                    {data.supportProvided &&
+                    Array.isArray(data.supportProvided) &&
+                    data.supportProvided.length > 0
+                      ? data.supportProvided.join(", ")
+                      : " NA"}
+                  </Typography>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <Typography variant="h6" className="w-60">
+                    {" "}
+                    Other Applicable:{" "}
+                  </Typography>
+                </td>
+                <td>
+                  <Typography>{data.otherApplicable || "NA"} </Typography>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <Typography variant="h6" className="w-60">
+                    {" "}
+                    How long is the franchise for(in years)?:{" "}
+                  </Typography>
+                </td>
+                <td>
+                  <Typography>
+                    {data.franchiseDurationAssociation?.name || "NA"}{" "}
+                  </Typography>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <Typography variant="h6" className="w-60">
+                    {" "}
+                    Is the term renewable?:{" "}
+                  </Typography>
+                </td>
+                <td>
+                  <Typography>
+                    {data.isRenewable?.toString() === "true" ? "Yes" : "No"}{" "}
+                  </Typography>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <Typography variant="h6" className="w-60">
+                    {" "}
+                    Is Operating Manuals:{" "}
+                  </Typography>
+                </td>
+                <td>
+                  <Typography>
+                    {data.isOperatingManuals?.toString() === "true"
+                      ? "Yes"
+                      : "No"}{" "}
+                  </Typography>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <Typography variant="h6" className="w-60">
+                    {" "}
+                    Franchisee training location:{" "}
+                  </Typography>
+                </td>
+                <td>
+                  <Typography>
+                    {data.trainingLocation?.toString() === "true"
+                      ? "Head office"
+                      : "Online/HQ"}{" "}
+                  </Typography>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <Typography variant="h6" className="w-60">
+                    {" "}
+                    Is Assistance Available:{" "}
+                  </Typography>
+                </td>
+                <td>
+                  <Typography>
+                    {data.isAssistanceAvailable?.toString() === "true"
+                      ? "Yes"
+                      : "No"}{" "}
+                  </Typography>
+                </td>
+              </tr>
+
+              <tr>
+                <td>
+                  <Typography variant="h6" className="w-60">
+                    {" "}
+                    Is Expert Guidance:{" "}
+                  </Typography>
+                </td>
+                <td>
+                  <Typography>
+                    {data.isExpertGuidance?.toString() === "true"
+                      ? "Yes"
+                      : "No"}{" "}
+                  </Typography>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <Typography variant="h6" className="w-60">
+                    {" "}
+                    Is IT System Included:{" "}
+                  </Typography>
+                </td>
+                <td>
+                  <Typography>
+                    {data.isITSystemIncluded?.toString() === "true"
+                      ? "Yes"
+                      : "No"}{" "}
                   </Typography>
                 </td>
               </tr>

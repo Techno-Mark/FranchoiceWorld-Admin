@@ -35,14 +35,7 @@ const Page = ({ params }: { params: { id: string } }) => {
   return (
     <>
       <LoadingBackdrop isLoading={loading} />
-      {!loading && brandDetail && (
-        <BrandDetail
-          brandDetails={brandDetail}
-          // open={EDIT_BLOG}
-          // editingRow={editingRow}
-          // handleClose={() => router.push("/content-management/blogs")}
-        />
-      )}
+      {!loading && brandDetail && <BrandDetail brandDetails={brandDetail} />}
     </>
   );
 };

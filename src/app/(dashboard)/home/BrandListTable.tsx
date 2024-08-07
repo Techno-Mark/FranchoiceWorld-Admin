@@ -3,8 +3,12 @@
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Card from "@mui/material/Card";
-import { MenuItem, TablePagination, TextFieldProps } from "@mui/material";
-import Button from "@mui/material/Button";
+import {
+  MenuItem,
+  TablePagination,
+  TextFieldProps,
+  Tooltip,
+} from "@mui/material";
 import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
 import classnames from "classnames";
@@ -23,18 +27,15 @@ import CustomTextField from "@core/components/mui/TextField";
 import tableStyles from "@core/styles/table.module.css";
 import { post } from "@/services/apiService";
 import CustomChip from "@/@core/components/mui/Chip";
-import BreadCrumbList from "@/components/BreadCrumbList";
 import LoadingBackdrop from "@/components/LoadingBackdrop";
-import { truncateText } from "@/utils/common";
-import { contactUsType } from "@/types/apps/contactUsType";
-import { contactUs } from "@/services/endpoint/contactUs";
 import { investorListType } from "@/types/apps/investorListType";
-import { investorList } from "@/services/endpoint/investorList";
 import { brandListType } from "@/types/apps/brandListType";
 import { brandList } from "@/services/endpoint/brandList";
 import ConfirmationDialog from "./ConfirmationDialog";
 import ConfirmUpdateStatus from "./ConfirmUpdateStatus";
 import ConfirmUpdateApprove from "./ConfirmUpdateApprove";
+import ConfirmSendMailDialog from "./ConfirmSendMailDialog";
+import trimText from "@/services/trimText";
 // import ConfirmationDialog from "./ConfirmationDialog";
 
 declare module "@tanstack/table-core" {
@@ -105,6 +106,8 @@ const BrandListTable = () => {
   const [activeFilter, setActiveFilter] = useState<boolean | null>(null);
   const [deletingId, setDeletingId] = useState<number>(0);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
+  const [sendingMailBrandId, setSendingMailBrandId] = useState<number>(0);
+  const [isSendingMail, setIsSendingMail] = useState<boolean>(false);
 
   const [statusUpdatingId, setStatusUpdatingId] = useState<number>(0);
   const [isStatusUpdating, setIsStatusUpdating] = useState<boolean>(false);
@@ -165,7 +168,7 @@ const BrandListTable = () => {
         header: "Brand Name",
         cell: ({ row }) => (
           <Typography color="text.primary" className="font-medium">
-            {row.original.brandName}
+            {trimText(row.original.brandName)}
           </Typography>
         ),
       }),
@@ -173,7 +176,7 @@ const BrandListTable = () => {
         header: "Sub Category",
         cell: ({ row }) => (
           <Typography color="text.primary" className="font-medium">
-            {row.original.subCategory}
+            {trimText(row.original.subCategory)}
           </Typography>
         ),
         enableSorting: true,
@@ -192,7 +195,7 @@ const BrandListTable = () => {
         header: "Investment Range",
         cell: ({ row }) => (
           <Typography color="text.primary" className="font-medium">
-            {row.original.investmentRange}
+            {trimText(row.original.investmentRange)}
           </Typography>
         ),
         enableSorting: false,
@@ -201,7 +204,7 @@ const BrandListTable = () => {
         header: "Locations",
         cell: ({ row }) => (
           <Typography color="text.primary" className="font-medium">
-            {row.original.numberOfLocations}
+            {trimText(row.original.numberOfLocations)}
           </Typography>
         ),
       }),
@@ -209,7 +212,7 @@ const BrandListTable = () => {
         header: "area",
         cell: ({ row }) => (
           <Typography color="text.primary" className="font-medium">
-            {row.original.areaaRequired}
+            {trimText(row.original.areaaRequired)}
           </Typography>
         ),
       }),
@@ -264,19 +267,40 @@ const BrandListTable = () => {
         header: "Actions",
         cell: ({ row }) => (
           <div className="flex items-center">
-            <IconButton
-              onClick={() => router.push(`/home/detail/${row.original.id}`)}
-            >
-              <i className="tabler-external-link text-[22px] text-textSecondary" />
-            </IconButton>
-            <IconButton
-              onClick={() => {
-                setIsDeleting(true);
-                setDeletingId(row.original.id);
-              }}
-            >
-              <i className="tabler-trash text-[22px] text-textSecondary" />
-            </IconButton>
+            <Tooltip title="View Details" placement="top">
+              <IconButton
+                onClick={() => router.push(`/home/detail/${row.original.id}`)}
+              >
+                <i className="tabler-external-link text-[22px] text-textSecondary" />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Edit Details" placement="top">
+              <IconButton
+                onClick={() => router.push(`/home/edit/${row.original.id}`)}
+              >
+                <i className="tabler-edit text-[22px] text-textSecondary" />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Delete" placement="top">
+              <IconButton
+                onClick={() => {
+                  setIsDeleting(true);
+                  setDeletingId(row.original.id);
+                }}
+              >
+                <i className="tabler-trash text-[22px] text-textSecondary" />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Send Verification Email" placement="top">
+              <IconButton
+                onClick={() => {
+                  setIsSendingMail(true);
+                  setSendingMailBrandId(row.original.id);
+                }}
+              >
+                <i className="tabler-mail text-[22px] text-textSecondary" />
+              </IconButton>
+            </Tooltip>
           </div>
         ),
         enableSorting: false,
@@ -331,12 +355,12 @@ const BrandListTable = () => {
             </div>
           </div>
           <div className="flex flex-col sm:flex-row is-full sm:is-auto items-start sm:items-center gap-4">
-            <DebouncedInput
+            {/* <DebouncedInput
               value={globalFilter ?? ""}
               onChange={(value) => setGlobalFilter(String(value))}
               placeholder="Search"
               className="is-full sm:is-auto"
-            />
+            /> */}
             <div className="flex flex-col sm:flex-row is-full sm:is-auto items-start sm:items-center gap-4">
               <Typography>Status:</Typography>
               <CustomTextField
@@ -477,6 +501,14 @@ const BrandListTable = () => {
             approveUpdatingId={approveUpdatingId}
             setApproveUpdatingId={setApproveUpdatingId}
             setOpen={(arg1: boolean) => setIsApproveUpdating(arg1)}
+          />
+        )}
+        {isSendingMail && (
+          <ConfirmSendMailDialog
+            open={isSendingMail}
+            sendingBrandId={sendingMailBrandId}
+            setsendingBrandId={setSendingMailBrandId}
+            setOpen={(arg1: boolean) => setIsSendingMail(arg1)}
           />
         )}
       </div>
