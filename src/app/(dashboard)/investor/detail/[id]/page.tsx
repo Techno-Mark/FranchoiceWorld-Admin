@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import LoadingBackdrop from "@/components/LoadingBackdrop";
 import { post } from "@/services/apiService";
-import { brandList } from "@/services/endpoint/brandList";
 import InvestorDetail from "./InvestorDetail";
 import { investorList } from "@/services/endpoint/investorList";
 
@@ -37,12 +36,7 @@ const Page = ({ params }: { params: { id: string } }) => {
     <>
       <LoadingBackdrop isLoading={loading} />
       {!loading && investorDetail && (
-        <InvestorDetail
-          investorDetail={investorDetail}
-          // open={EDIT_BLOG}
-          // editingRow={editingRow}
-          // handleClose={() => router.push("/content-management/blogs")}
-        />
+        <InvestorDetail investorDetail={investorDetail} />
       )}
     </>
   );

@@ -96,6 +96,11 @@ const UserDropdown = () => {
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         className="mis-2"
       >
+        <div className="flex items-center pli-6" tabIndex={-1}>
+          <div className="flex items-start flex-col">
+            <Typography variant="caption">{userEmail}</Typography>
+          </div>
+        </div>
         <Avatar
           ref={anchorRef}
           alt={userName}

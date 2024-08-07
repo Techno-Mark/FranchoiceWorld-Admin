@@ -3,15 +3,8 @@
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Card from "@mui/material/Card";
-import {
-  MenuItem,
-  TablePagination,
-  TextFieldProps,
-  Tooltip,
-} from "@mui/material";
-import Button from "@mui/material/Button";
+import { TablePagination, TextFieldProps } from "@mui/material";
 import Typography from "@mui/material/Typography";
-import IconButton from "@mui/material/IconButton";
 import classnames from "classnames";
 import { RankingInfo, rankItem } from "@tanstack/match-sorter-utils";
 import {
@@ -27,14 +20,11 @@ import type { ColumnDef, FilterFn } from "@tanstack/react-table";
 import CustomTextField from "@core/components/mui/TextField";
 import tableStyles from "@core/styles/table.module.css";
 import { post } from "@/services/apiService";
-import CustomChip from "@/@core/components/mui/Chip";
-import { TemplateType } from "@/types/apps/templateType";
-import BreadCrumbList from "@/components/BreadCrumbList";
 import LoadingBackdrop from "@/components/LoadingBackdrop";
-import { truncateText } from "@/utils/common";
 import { contactUsType } from "@/types/apps/contactUsType";
 import { contactUs } from "@/services/endpoint/contactUs";
 import trimText from "@/services/trimText";
+import mapWhoAmI from "@/services/whoAmIMapping";
 // import ConfirmationDialog from "./ConfirmationDialog";
 
 declare module "@tanstack/table-core" {
@@ -172,6 +162,15 @@ const ContactUsListTable = () => {
           </Typography>
         ),
         enableSorting: true,
+      }),
+      columnHelper.accessor("whoAmI", {
+        header: "Who am I",
+        cell: ({ row }) => (
+          <Typography color="text.primary" className="font-medium">
+            {mapWhoAmI(row.original.whoAmI)}
+          </Typography>
+        ),
+        enableSorting: false,
       }),
       columnHelper.accessor("pageFrom", {
         header: "Page From",

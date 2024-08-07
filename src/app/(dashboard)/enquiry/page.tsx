@@ -1,8 +1,8 @@
 import React from "react";
-import InquiryList from "./InquiryList";
+import EnquiryList from "./EnquiryList";
 
 const page = () => {
-  return <InquiryList />;
+  return <EnquiryList />;
 };
 
 export default page;

@@ -1,7 +1,8 @@
-import { Card, Typography, Grid } from "@mui/material";
+import { Card, Typography, Grid, Button } from "@mui/material";
 import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import React from "react";
 
 type pageProps = {
@@ -9,8 +10,20 @@ type pageProps = {
 };
 
 function BrandDetail({ brandDetails: data }: pageProps) {
+  const router = useRouter();
   return (
     <Grid container spacing={6} alignItems={"flex-start"}>
+      <Grid item xs={12} sm={12} className="mt-3">
+        <Button
+          variant="contained"
+          color="info"
+          className="mx-2"
+          onClick={() => router.push("/home")}
+        >
+          Back
+        </Button>
+      </Grid>
+
       <Grid
         item
         xs={12}

@@ -9,7 +9,6 @@ import {
   TextFieldProps,
   Tooltip,
 } from "@mui/material";
-import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
 import classnames from "classnames";
@@ -28,11 +27,7 @@ import CustomTextField from "@core/components/mui/TextField";
 import tableStyles from "@core/styles/table.module.css";
 import { post } from "@/services/apiService";
 import CustomChip from "@/@core/components/mui/Chip";
-import BreadCrumbList from "@/components/BreadCrumbList";
 import LoadingBackdrop from "@/components/LoadingBackdrop";
-import { truncateText } from "@/utils/common";
-import { contactUsType } from "@/types/apps/contactUsType";
-import { contactUs } from "@/services/endpoint/contactUs";
 import { investorListType } from "@/types/apps/investorListType";
 import { investorList } from "@/services/endpoint/investorList";
 import ConfirmationDialog from "./ConfirmationDialog";
