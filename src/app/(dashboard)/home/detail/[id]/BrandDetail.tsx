@@ -14,14 +14,12 @@ function BrandDetail({ brandDetails: data }: pageProps) {
   return (
     <Grid container spacing={6} alignItems={"flex-start"}>
       <Grid item xs={12} sm={12} className="mt-3">
-        <Button
-          variant="contained"
-          color="info"
-          className="mx-2"
+        <button
+          className="bg-[#17498a] text-white font-semibold py-2 px-4 mx-2 cursor-pointer rounded-lg shadow-md hover:bg-[#1d4981] transition-colors duration-300"
           onClick={() => router.push("/home")}
         >
           Back
-        </Button>
+        </button>
       </Grid>
 
       <Grid
