@@ -627,6 +627,30 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
           hasAnyFile = true;
         }
 
+        const removeResourceList: any = {};
+        let anyRemovalResouce = false;
+        if (isFilesTouched.brochure && !brochure) {
+          removeResourceList.brochure = true;
+          anyRemovalResouce = true;
+        }
+        if (isFilesTouched.logo && !logo) {
+          removeResourceList.logo = true;
+          anyRemovalResouce = true;
+        }
+        if (isFilesTouched.video && !video) {
+          removeResourceList.video = true;
+          anyRemovalResouce = true;
+        }
+
+        if (isFilesTouched.franchiseAggrementFile && !franchiseAggrementFile) {
+          removeResourceList.franchiseAggrementFile = true;
+          anyRemovalResouce = true;
+        }
+        if (isFilesTouched.brandImages && brandImages.length < 1) {
+          removeResourceList.brandImages = true;
+          anyRemovalResouce = true;
+        }
+
         setLoading(true);
         const endpoint = brandList.edit;
         let response = await post(endpoint, { ...otherALLData, brandId: id });
@@ -634,6 +658,13 @@ function BrandEditForm({ editData, handleClose }: pageProps) {
         if (hasAnyFile) {
           formDataObject.append("brandId", id.toString());
           response = await postFormData(endpoint, formDataObject);
+        }
+
+        if (anyRemovalResouce) {
+          response = await post(brandList.removeReource, {
+            ...removeResourceList,
+            brandId: id,
+          });
         }
 
         if (response.ResponseStatus === "success") {
