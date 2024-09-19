@@ -108,6 +108,12 @@ const VerticalMenu = ({ scrollMenu }: Props) => {
         >
           Enquiry
         </MenuItem>
+        <MenuItem
+          href="/register-event-popup"
+          icon={<i className="tabler-clipboard-data" />}
+        >
+          Register Event pop-up
+        </MenuItem>
         {/* <MenuItem href='/content-management/pages' icon={<i className='tabler-brand-pagekit' />}>
           Pages
         </MenuItem>
