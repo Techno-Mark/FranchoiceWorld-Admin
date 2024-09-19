@@ -5,4 +5,5 @@ export type registerEventType = {
   phoneNumber: string;
   state?: string;
   city?: string;
+  createAt?:string;
 };

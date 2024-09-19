@@ -21,7 +21,6 @@ import CustomTextField from "@core/components/mui/TextField";
 import tableStyles from "@core/styles/table.module.css";
 import { post } from "@/services/apiService";
 import LoadingBackdrop from "@/components/LoadingBackdrop";
-import { contactUsType } from "@/types/apps/contactUsType";
 import { registerEventType } from "@/types/apps/registerEventListType";
 import trimText from "@/services/trimText";
 import { registerEvent } from "@/services/endpoint/register-event";
@@ -44,6 +43,11 @@ const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
   const itemRank = rankItem(row.getValue(columnId), value);
   addMeta({ itemRank });
   return itemRank.passed;
+};
+
+const formatDate = (dateString:any) => {
+  const date = new Date(dateString);
+  return date.toISOString().split("T")[0]; // Extracting date part only (YYYY-MM-DD)
 };
 
 const DebouncedInput = ({
@@ -149,48 +153,33 @@ const RegisterEventListTable = () => {
         ),
         enableSorting: true,
       }),
-
-      // columnHelper.accessor("active", {
-      //   header: "Status",
-      //   cell: ({ row }) => (
-      //     <div className="flex items-center">
-      //       <CustomChip
-      //         size="small"
-      //         round="true"
-      //         label={row.original.active ? "Publish" : "Draft"}
-      //         variant="tonal"
-      //         color={row.original.active ? "success" : "warning"}
-      //       />
-      //     </div>
-      //   ),
-      //   enableSorting: false,
-      // }),
-
-      // columnHelper.accessor("eventId", {
-      //   header: "Actions",
-      //   cell: ({ row }) => (
-      //     <div className="flex items-center">
-      //       <IconButton
-      //         onClick={() =>
-      //           router.push(
-      //             `/content-management/events/edit/${row.original.eventId}`
-      //           )
-      //         }
-      //       >
-      //         <i className="tabler-edit text-[22px] text-textSecondary" />
-      //       </IconButton>
-      //       <IconButton
-      //         onClick={() => {
-      //           setIsDeleting(true);
-      //           setDeletingId(row.original.eventId);
-      //         }}
-      //       >
-      //         <i className="tabler-trash text-[22px] text-textSecondary" />
-      //       </IconButton>
-      //     </div>
-      //   ),
-      //   enableSorting: false,
-      // }),
+      columnHelper.accessor("state", {
+        header: "State",
+        cell: ({ row }) => (
+          <Typography color="text.primary" className="font-medium">
+            {trimText(row.original.state)}
+          </Typography>
+        ),
+        enableSorting: true,
+      }),
+      columnHelper.accessor("city", {
+        header: "City",
+        cell: ({ row }) => (
+          <Typography color="text.primary" className="font-medium">
+            {trimText(row.original.city)}
+          </Typography>
+        ),
+        enableSorting: true,
+      }),
+      columnHelper.accessor("createAt", {
+        header: "Create",
+        cell: ({ row }) => (
+          <Typography color="text.primary" className="font-medium">
+            {formatDate(row.original.createAt)}
+          </Typography>
+        ),
+        enableSorting: true,
+      }),
     ],
     [router, page, pageSize]
   );
