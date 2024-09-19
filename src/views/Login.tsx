@@ -208,10 +208,8 @@ const Login = ({ mode }: { mode: SystemMode }) => {
           </div>
           <div className="flex flex-col gap-6 is-full sm:is-auto md:is-full sm:max-is-[400px] md:max-is-[unset] mbs-8 sm:mbs-11 md:mbs-0">
             <div className="flex flex-col gap-1">
-              <Typography variant="h4">{`Welcome to ${themeConfig.templateName}! 👋🏻`}</Typography>
-              <Typography>
-                Please sign-in to your account and start the adventure
-              </Typography>
+              <Typography variant="h4">{`Welcome to Franchoice World Admin Panel!`}</Typography>
+              <Typography>Please sign-in to your account</Typography>
             </div>
 
             <form
@@ -236,11 +234,11 @@ const Login = ({ mode }: { mode: SystemMode }) => {
                       field.onChange(e.target.value);
                       errorState !== null && setErrorState(null);
                     }}
-                    {...((errors.email || errorState !== null) && {
-                      error: true,
-                      helperText:
-                        errors?.email?.message || errorState?.message[0],
-                    })}
+                    // {...((errors.email || errorState !== null) && {
+                    //   error: true,
+                    //   helperText:
+                    //     errors?.email?.message || errorState?.message[0],
+                    // })}
                   />
                 )}
               />
@@ -286,17 +284,6 @@ const Login = ({ mode }: { mode: SystemMode }) => {
                   />
                 )}
               />
-              <div className="flex justify-between items-center gap-x-3 gap-y-1 flex-wrap">
-                {/* <FormControlLabel control={<Checkbox defaultChecked />} label='Remember me' /> */}
-                <Typography
-                  className="text-end"
-                  color="primary"
-                  component={Link}
-                  href={"/forgot-password"}
-                >
-                  Forgot password?
-                </Typography>
-              </div>
               <Button
                 fullWidth
                 variant="contained"
