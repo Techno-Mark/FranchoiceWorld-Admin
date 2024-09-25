@@ -45,7 +45,7 @@ const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
   return itemRank.passed;
 };
 
-const formatDate = (dateString:any) => {
+const formatDate = (dateString: any) => {
   const date = new Date(dateString);
   return date.toISOString().split("T")[0]; // Extracting date part only (YYYY-MM-DD)
 };
@@ -132,6 +132,22 @@ const RegisterEventListTable = () => {
         cell: ({ row }) => (
           <Typography color="text.primary" className="font-medium">
             {trimText(row.original.name)}
+          </Typography>
+        ),
+      }),
+      columnHelper.accessor("jobTitle", {
+        header: "Job Title",
+        cell: ({ row }) => (
+          <Typography color="text.primary" className="font-medium">
+            {trimText(row.original.jobTitle)}
+          </Typography>
+        ),
+      }),
+      columnHelper.accessor("investmentCapital", {
+        header: "Investment Capital",
+        cell: ({ row }) => (
+          <Typography color="text.primary" className="font-medium">
+            {trimText(row.original.investmentCapital)}
           </Typography>
         ),
       }),
