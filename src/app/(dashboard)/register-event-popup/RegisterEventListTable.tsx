@@ -182,7 +182,7 @@ const RegisterEventListTable = () => {
         header: "Invited By",
         cell: ({ row }) => (
           <Typography color="text.primary" className="font-medium">
-            {trimText(row.original.invitedBy)}
+            {trimText(row.original?.invitedBy)}
           </Typography>
         ),
         enableSorting: true,
@@ -191,7 +191,7 @@ const RegisterEventListTable = () => {
         header: "Create",
         cell: ({ row }) => (
           <Typography color="text.primary" className="font-medium">
-            {formatDate(row.original.createAt)}
+            {formatDate(row.original?.createAt)}
           </Typography>
         ),
         enableSorting: true,
