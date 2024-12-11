@@ -169,20 +169,20 @@ const RegisterEventListTable = () => {
         ),
         enableSorting: true,
       }),
-      columnHelper.accessor("state", {
-        header: "State",
+      columnHelper.accessor("interestedCategory", {
+        header: "Interested Category",
         cell: ({ row }) => (
           <Typography color="text.primary" className="font-medium">
-            {trimText(row.original.state)}
+            {trimText(row.original.interestedCategory)}
           </Typography>
         ),
         enableSorting: true,
       }),
-      columnHelper.accessor("city", {
-        header: "City",
+      columnHelper.accessor("invitedBy", {
+        header: "Invited By",
         cell: ({ row }) => (
           <Typography color="text.primary" className="font-medium">
-            {trimText(row.original.city)}
+            {trimText(row.original?.invitedBy)}
           </Typography>
         ),
         enableSorting: true,
@@ -191,7 +191,7 @@ const RegisterEventListTable = () => {
         header: "Create",
         cell: ({ row }) => (
           <Typography color="text.primary" className="font-medium">
-            {formatDate(row.original.createAt)}
+            {formatDate(row.original?.createAt)}
           </Typography>
         ),
         enableSorting: true,
