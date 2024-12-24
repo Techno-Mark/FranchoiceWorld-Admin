@@ -247,13 +247,13 @@ function EventDetail({ eventDetails: data }: PageProps) {
                   <Typography variant="h6"> Event Images: </Typography>
                 </td>
                 <td className="flex gap-x-2 gap-y-4 flex-wrap">
-                  {data.brandImages?.length &&
-                  Array.isArray(data.brandImages) &&
-                  data.brandImages.length > 0
-                    ? data.brandImages.map((path: string) => {
+                  {data.eventImages?.length &&
+                  Array.isArray(data.eventImages) &&
+                  data.eventImages.length > 0
+                    ? data.eventImages.map((path: string) => {
                         return (
                           <img
-                            src={`${process.env.NEXT_PUBLIC_BASE_API_URL}/${path}`}
+                            src={`${process.env.NEXT_PUBLIC_API_URL?.replace("/api", "")}/${path}`}
                             width={"350px"}
                             height={"200px"}
                             className="object-cover p-1 rounded-lg"

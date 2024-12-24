@@ -14,24 +14,25 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import ConfirmationDialog from "./ConfirmationDialog";
 // Icon Imports
+import { post, postFormData } from "@/services/apiService";
+import { eventDetails } from "@/services/endpoint/event-details";
+import { FormikHelpers, useFormik } from "formik";
 import { useParams, useRouter } from "next/navigation";
 import { useDropzone } from "react-dropzone";
-import { FormikHelpers, FormikValues, useFormik } from "formik";
 import * as Yup from "yup";
-import { eventDetails } from "@/services/endpoint/event-details";
 import {
   getCategories,
   getCity,
   getCountry,
   getState,
 } from "./dropdownAPIService";
-import { get, post } from "@/services/apiService";
 
 type FileProp = {
   name: string;
   type: string;
   size: number;
   preview?: string;
+  file: File;
 };
 
 interface FormData {
@@ -116,6 +117,7 @@ const validationSchema = Yup.object({
 });
 
 function EditEventForm() {
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
   const router = useRouter();
   const params = useParams();
   const eventId = params.id;
@@ -133,7 +135,7 @@ function EditEventForm() {
   // Images Dropzone
   const { getRootProps, getInputProps } = useDropzone({
     maxFiles: 5,
-    maxSize: 10000000, // 10MB
+    maxSize: 10000000,
     accept: {
       "image/png": [],
       "image/jpeg": [],
@@ -152,6 +154,7 @@ function EditEventForm() {
         type: file.type,
         size: file.size,
         preview: URL.createObjectURL(file),
+        file: file,
       }));
 
       const updatedFiles = [...currentFiles, ...newFiles];
@@ -199,9 +202,27 @@ function EditEventForm() {
   };
 
   const renderFilePreview = (file: FileProp) => {
-    if (file.type.startsWith("image/")) {
+    if (file.type?.startsWith("image/") || typeof file.name === "string") {
+      const imageSrc =
+        file.preview ||
+        (file.name.startsWith("/") ? file.name : `${API_URL}/${file.name}`);
+
       return (
-        <img width={100} height={100} alt={file.name} src={file.preview} />
+        <img
+          width={100}
+          height={100}
+          alt={file.name.split("/").pop() || "Event image"}
+          src={imageSrc}
+          style={{
+            objectFit: "cover",
+            borderRadius: "4px",
+            padding: "5px",
+          }}
+          onError={(e) => {
+            console.error(`Error loading preview for ${file.name}`);
+            e.currentTarget.src = "/placeholder-image.png";
+          }}
+        />
       );
     }
     return null;
@@ -280,27 +301,41 @@ function EditEventForm() {
     validateOnMount: false,
     validateOnChange: true,
     onSubmit: async (
-      values,
-      { setFieldTouched }: FormikHelpers<typeof initialValues>
+      values: FormData,
+      { setFieldTouched }: FormikHelpers<FormData>
     ) => {
       if (values.eventImages.length === 0) {
         toast.error("At least one image is required");
         return;
       }
-      Object.keys(values).forEach((fieldName) => {
-        setFieldTouched(fieldName as keyof FormData, true);
+
+      const formDataObject = new FormData();
+
+      (Object.keys(values) as Array<keyof typeof values>).forEach((key) => {
+        if (key !== "eventImages") {
+          const value = values[key];
+          if (value === null) {
+            formDataObject.append(key, "");
+          } else if (value instanceof Date) {
+            formDataObject.append(key, value.toISOString());
+          } else {
+            formDataObject.append(key, String(value));
+          }
+        }
       });
+      values.eventImages.forEach((fileProp: FileProp) => {
+        formDataObject.append("eventImages", fileProp.file);
+      });
+      formDataObject.append("eventId", String(eventId));
 
       try {
-        const response = await post(eventDetails.save, {
-          ...values,
-          eventId: Number(eventId),
-        });
+        setLoading(true);
+        const response = await postFormData(eventDetails.save, formDataObject);
         toast.success(response.Message);
         router.push("/event-details");
       } catch (error: any) {
         console.error("Error posting data:", error.message);
-        // toast.error(error.message || "Error submitting form");
+        toast.error(error.message || "Error submitting form");
       } finally {
         setLoading(false);
       }
@@ -320,6 +355,16 @@ function EditEventForm() {
         await fetchCity(eventData.state);
       }
 
+      const formattedImages =
+        eventData.eventImages?.map((imagePath: string) => ({
+          name: imagePath.split("/").pop(),
+          type: "image/jpeg",
+          size: 0,
+          preview: imagePath.startsWith("/")
+            ? imagePath
+            : `${API_URL?.replace("/api", "")}${imagePath.startsWith("api/") ? imagePath.replace("api/", "") : `/${imagePath}`}`,
+        })) || [];
+
       // Set form values
       formik.setValues({
         eventId: eventData.id,
@@ -336,13 +381,7 @@ function EditEventForm() {
         endTime: eventData.endTime || "",
         contactInfo: eventData.contactInfo || "",
         status: eventData.status || "Publish",
-        eventImages:
-          eventData.eventImages?.map((img: any) => ({
-            name: img.name,
-            type: img.type,
-            size: img.size,
-            preview: img.url, // Assuming the API returns image URLs
-          })) || [],
+        eventImages: formattedImages,
       });
     } catch (error) {
       console.error("Error fetching event details:", error);
@@ -654,7 +693,7 @@ function EditEventForm() {
                         className="file-details flex justify-between items-center w-[450px] p-2 border rounded"
                       >
                         {renderFilePreview(file)}
-                        <Typography className="file-name">
+                        <Typography className="file-name p-3">
                           {file.name}
                         </Typography>
                         <IconButton
