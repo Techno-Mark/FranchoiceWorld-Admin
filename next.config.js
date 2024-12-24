@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   basePath: process.env.BASEPATH,
+  images: {
+    domains: ["crm-stageapi.pacificabs.com", "api.franchoiceworld.com"],
+  },
   redirects: async () => {
     return [
       {
