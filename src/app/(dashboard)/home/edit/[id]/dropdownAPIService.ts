@@ -10,7 +10,7 @@ export const fetchCountries = async () => {
 };
 
 export const fetchStates = async () => {
-  const data = await get(dropdownAPIs.states);
+  const data = await post(dropdownAPIs.states,{});
   if (data.ResponseStatus !== "success") {
     throw new Error("Error While Finding States");
   }
