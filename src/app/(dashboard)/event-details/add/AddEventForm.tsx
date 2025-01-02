@@ -26,6 +26,7 @@ import {
   getCountry,
   getState,
 } from "./dropdownAPIService";
+import { boolean } from "valibot";
 
 type FileProp = {
   name: string;
@@ -49,7 +50,6 @@ interface FormData {
   startTime: string;
   endTime: string;
   contactInfo: string;
-  status: string;
   eventImages: FileProp[];
 }
 
@@ -67,15 +67,18 @@ const initialValues: FormData = {
   startTime: "",
   endTime: "",
   contactInfo: "",
-  status: "Publish",
   eventImages: [],
 };
 
 const validationSchema = Yup.object({
   eventName: Yup.string().required("Event Name is required"),
-  eventDescription: Yup.string().required("Event Description is required"),
+  eventDescription: Yup.string()
+    .required("Event Description is required")
+    .max(500, "Event Description must not exceed 500 characters"),
   eventCategory: Yup.string().required("Event Category is required"),
-  location: Yup.string().required("Location is required"),
+  location: Yup.string()
+    .required("Location is required")
+    .max(250, "Location must not exceed 250 characters"),
   country: Yup.string().required("Country is required"),
   state: Yup.string().required("State is required"),
   city: Yup.string().required("City is required"),
@@ -83,7 +86,10 @@ const validationSchema = Yup.object({
   endDate: Yup.date().required("End Date is required"),
   startTime: Yup.string().required("Start Time is required"),
   endTime: Yup.string().required("End Time is required"),
-  status: Yup.string().required("Status is required"),
+  // status: Yup.string().required("Status is required"),
+  contactInfo: Yup.string()
+    .required("Contact Info is required")
+    .max(50, "Contact Info must not exceed 50 characters"),
   eventImages: Yup.array()
     .min(1, "At least one image is required")
     .max(5, "Maximum 5 images allowed")
@@ -119,6 +125,7 @@ const validationSchema = Yup.object({
 function AddEventForm() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState<string>("");
 
   //dropdown
   const [categoriesOptions, setCategoriesOptions] = useState([]);
@@ -142,7 +149,7 @@ function AddEventForm() {
       const currentFiles = formik.values.eventImages;
 
       if (currentFiles.length + acceptedFiles.length > 5) {
-        toast.error("Maximum 5 images allowed");
+        toast.error("Maximum 5 images are allowed");
         return;
       }
 
@@ -172,17 +179,24 @@ function AddEventForm() {
       formik.setFieldTouched("eventImages", true, false);
     },
     onDropRejected: (fileRejections) => {
-      const errors = fileRejections
-        .map((rejection) =>
-          rejection.errors.map((error) => {
-            if (error.code === "file-too-large") {
-              return "File is too large. Size limit is 2MB for single image or 10MB total for multiple images";
-            }
-            return error.message;
-          })
-        )
-        .flat();
-      toast.error(errors.join(", "), { autoClose: 3000 });
+      const errorMessages = new Set();
+
+      fileRejections.forEach((rejection) => {
+        rejection.errors.forEach((error) => {
+          if (error.code === "too-many-files") {
+            errorMessages.add("Maximum 5 images are allowed");
+          } else if (error.code === "file-too-large") {
+            errorMessages.add(
+              "File is too large. Size limit is 2MB for single image or 10MB total for multiple images"
+            );
+          } else {
+            errorMessages.add(error.message);
+          }
+        });
+      });
+
+      const errorMessage = Array.from(errorMessages).join(". ");
+      toast.error(errorMessage, { autoClose: 3000 });
     },
   });
 
@@ -291,22 +305,27 @@ function AddEventForm() {
     validationSchema,
     validateOnMount: false,
     validateOnChange: true,
-    onSubmit: async (
-      values: FormData,
-      { setFieldTouched }: FormikHelpers<FormData>
-    ) => {
-      if (values.eventImages.length === 0) {
-        toast.error("At least one image is required");
-        return;
-      }
+    onSubmit: async () => {
+      await handleSave();
+    },
+  });
 
-      try {
-        setLoading(true);
-        const formDataObject = new FormData();
+  const handleSave = async () => {
+    if (formik.values.eventImages.length === 0) {
+      toast.error("At least one image is required");
+      return;
+    }
+    console.log("🚀 ~ handleSave ~ formik.values:", formik.values)
 
-        (Object.keys(values) as Array<keyof typeof values>).forEach((key) => {
+    try {
+      setLoading(true);
+      const formDataObject = new FormData();
+
+      formDataObject.append("status", status);
+      (Object.keys(formik.values) as Array<keyof typeof formik.values>).forEach(
+        (key) => {
           if (key !== "eventImages") {
-            const value = values[key];
+            const value = formik.values[key];
             if (value === null) {
               formDataObject.append(key, "");
             } else if (value instanceof Date) {
@@ -315,21 +334,22 @@ function AddEventForm() {
               formDataObject.append(key, String(value));
             }
           }
-        });
+        }
+      );
 
-        values.eventImages.forEach((fileProp: FileProp) => {
-          formDataObject.append("eventImages", fileProp.file);
-        });
-        const response = await postFormData(eventDetails.save, formDataObject);
-        toast.success(response.Message);
-        router.push("/event-details");
-      } catch (error: any) {
-        console.error("Error posting data:", error.message);
-      } finally {
-        setLoading(false);
-      }
-    },
-  });
+      formik.values.eventImages.forEach((fileProp: FileProp) => {
+        formDataObject.append("eventImages", fileProp.file);
+      });
+
+      const response = await postFormData(eventDetails.save, formDataObject);
+      toast.success(response.Message);
+      router.push("/event-details");
+    } catch (error: any) {
+      console.error("Error posting data:", error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (loading) {
     return <LoadingBackdrop isLoading={loading} />;
@@ -493,6 +513,9 @@ function AddEventForm() {
                     label="Start Date *"
                     type="date"
                     fullWidth
+                    inputProps={{
+                      min: new Date().toISOString().split("T")[0],
+                    }}
                     error={
                       formik.touched.startDate &&
                       Boolean(formik.errors.startDate)
@@ -509,6 +532,9 @@ function AddEventForm() {
                     label="End Date *"
                     type="date"
                     fullWidth
+                    inputProps={{
+                      min: new Date().toISOString().split("T")[0],
+                    }}
                     error={
                       formik.touched.endDate && Boolean(formik.errors.endDate)
                     }
@@ -548,13 +574,20 @@ function AddEventForm() {
 
                 <Grid item xs={12} sm={6}>
                   <CustomTextField
-                    label="Contact Info"
+                    label="Contact Info *"
                     fullWidth
+                    error={
+                      formik.touched.contactInfo &&
+                      Boolean(formik.errors.contactInfo)
+                    }
+                    helperText={
+                      formik.touched.contactInfo && formik.errors.contactInfo
+                    }
                     {...formik.getFieldProps("contactInfo")}
                   />
                 </Grid>
 
-                <Grid item xs={12} sm={6}>
+                {/* <Grid item xs={12} sm={6}>
                   <CustomTextField
                     label="Status *"
                     select
@@ -571,11 +604,11 @@ function AddEventForm() {
                     <MenuItem key={"Inactive"} value={"Inactive"}>
                       Inactive
                     </MenuItem>
-                    <MenuItem key={"Drafted"} value={"drafted"}>
+                    <MenuItem key={"Drafted"} value={"Drafted"}>
                       Drafted
                     </MenuItem>
                   </CustomTextField>
-                </Grid>
+                </Grid> */}
               </Grid>
             </Card>
           </Grid>
@@ -589,6 +622,16 @@ function AddEventForm() {
               <Grid container spacing={2} className="mt-5">
                 <Grid item xs={12} sm={6} className="mt-3">
                   <div {...getRootProps({ className: "dropzone" })}>
+                    <Typography
+                      variant="h6"
+                      className={`${
+                        formik.touched.eventImages && formik.errors.eventImages
+                          ? "text-red-500"
+                          : ""
+                      }`}
+                    >
+                      Add Images *
+                    </Typography>
                     <input {...getInputProps()} />
                     <div
                       className={`flex items-center flex-col w-[450px] h-[200px] p-2 border-dashed border-2 ${
@@ -656,7 +699,19 @@ function AddEventForm() {
               >
                 Cancel
               </Button>
-              <Button variant="contained" type="submit">
+              <Button variant="outlined" color="primary" onClick={() => {
+                  setStatus("Drafted");
+                  formik.handleSubmit();
+                }}>
+                Save as Draft
+              </Button>
+              <Button
+                variant="contained"
+                onClick={() => {
+                  setStatus("Active");
+                  formik.handleSubmit();
+                }}
+              >
                 Add
               </Button>
             </Box>

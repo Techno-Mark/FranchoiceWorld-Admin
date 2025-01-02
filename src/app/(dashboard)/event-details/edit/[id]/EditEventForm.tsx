@@ -566,6 +566,9 @@ function EditEventForm() {
                     label="Start Date *"
                     type="date"
                     fullWidth
+                    inputProps={{
+                      min: new Date().toISOString().split('T')[0]
+                    }}
                     error={
                       formik.touched.startDate &&
                       Boolean(formik.errors.startDate)
@@ -582,6 +585,9 @@ function EditEventForm() {
                     label="End Date *"
                     type="date"
                     fullWidth
+                    inputProps={{
+                      min: new Date().toISOString().split('T')[0]
+                    }}
                     error={
                       formik.touched.endDate && Boolean(formik.errors.endDate)
                     }
@@ -644,7 +650,7 @@ function EditEventForm() {
                     <MenuItem key={"Inactive"} value={"Inactive"}>
                       Inactive
                     </MenuItem>
-                    <MenuItem key={"Drafted"} value={"drafted"}>
+                    <MenuItem key={"Drafted"} value={"Drafted"}>
                       Drafted
                     </MenuItem>
                   </CustomTextField>
@@ -662,6 +668,11 @@ function EditEventForm() {
               <Grid container spacing={2} className="mt-5">
                 <Grid item xs={12} sm={6} className="mt-3">
                   <div {...getRootProps({ className: "dropzone" })}>
+                  <Typography variant="h6" className={`${
+                        formik.touched.eventImages && formik.errors.eventImages
+                          ? "text-red-500"
+                          : ""
+                      }`}>Add Images *</Typography>
                     <input {...getInputProps()} />
                     <div
                       className={`flex items-center flex-col w-[450px] h-[200px] p-2 border-dashed border-2 ${
@@ -730,7 +741,7 @@ function EditEventForm() {
                 Cancel
               </Button>
               <Button variant="contained" type="submit">
-                Add
+                Update
               </Button>
             </Box>
           </Grid>

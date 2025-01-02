@@ -8,5 +8,10 @@ export type eventDetailListType = {
   startTime: string;
   endTime: string;
   status: string;
+  categoryName: string;
+  countryName: string;
+  stateName: string;
+  cityName: string;
+  userCount: number;
 };
 

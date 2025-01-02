@@ -1,42 +1,41 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
-import Card from "@mui/material/Card";
+import CustomChip from "@/@core/components/mui/Chip";
+import LoadingBackdrop from "@/components/LoadingBackdrop";
+import { post } from "@/services/apiService";
+import { eventDetails } from "@/services/endpoint/event-details";
+import trimText from "@/services/trimText";
+import { eventDetailListType } from "@/types/apps/eventDetailListType";
+import { investorListType } from "@/types/apps/investorListType";
+import CustomTextField from "@core/components/mui/TextField";
+import tableStyles from "@core/styles/table.module.css";
 import {
   Button,
-  MenuItem,
   TablePagination,
   TextFieldProps,
-  Tooltip,
+  Tooltip
 } from "@mui/material";
-import Typography from "@mui/material/Typography";
+import Card from "@mui/material/Card";
 import IconButton from "@mui/material/IconButton";
-import classnames from "classnames";
+import Typography from "@mui/material/Typography";
 import { RankingInfo, rankItem } from "@tanstack/match-sorter-utils";
+import type { ColumnDef, FilterFn } from "@tanstack/react-table";
 import {
   createColumnHelper,
   flexRender,
   getCoreRowModel,
-  useReactTable,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
+  useReactTable,
 } from "@tanstack/react-table";
-import type { ColumnDef, FilterFn } from "@tanstack/react-table";
-import CustomTextField from "@core/components/mui/TextField";
-import tableStyles from "@core/styles/table.module.css";
-import { post } from "@/services/apiService";
-import CustomChip from "@/@core/components/mui/Chip";
-import LoadingBackdrop from "@/components/LoadingBackdrop";
-import { investorListType } from "@/types/apps/investorListType";
+import classnames from "classnames";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 import ConfirmationDialog from "./ConfirmationDialog";
-import ConfirmUpdateStatus from "./ConfirmUpdateStatus";
 import ConfirmUpdateApprove from "./ConfirmUpdateApprove";
-import trimText from "@/services/trimText";
+import ConfirmUpdateStatus from "./ConfirmUpdateStatus";
 import EventFilter from "./filter";
-import { eventDetails } from "@/services/endpoint/event-details";
-import { eventDetailListType } from "@/types/apps/eventDetailListType";
 
 declare module "@tanstack/table-core" {
   interface FilterFns {
@@ -107,7 +106,7 @@ const EventDetailListTable = () => {
 
   const router = useRouter();
 
-  const [data, setData] = useState<investorListType[]>([]);
+  const [data, setData] = useState<eventDetailListType[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState<number>(0);
@@ -199,7 +198,7 @@ const EventDetailListTable = () => {
   const columns = useMemo<ColumnDef<BrandTypeWithAction, any>[]>(
     () => [
       columnHelper.accessor("srNo", {
-        header: "Sr. No.",
+        header: "Event ID",
         cell: ({ row }) => (
           <Typography color="text.primary" className="font-medium">
             {row.index + 1 + page * pageSize}
@@ -224,16 +223,6 @@ const EventDetailListTable = () => {
         ),
         enableSorting: true,
       }),
-      // columnHelper.accessor("phoneNumber", {
-      //   header: "Phone Number",
-      //   cell: ({ row }) => (
-      //     <Typography color="text.primary" className="font-medium">
-      //       {row.original.countryCode + " " + row.original.phoneNumber}
-      //     </Typography>
-      //   ),
-      //   enableSorting: true,
-      // }),
-
       columnHelper.accessor("endDate", {
         header: "end date",
         cell: ({ row }) => (
@@ -259,7 +248,30 @@ const EventDetailListTable = () => {
           </Typography>
         ),
       }),
-
+      columnHelper.accessor("cityName", {
+        header: "city",
+        cell: ({ row }) => (
+          <Typography color="text.primary" className="font-medium">
+            {trimText(row.original.cityName)}
+          </Typography>
+        ),
+      }),
+      columnHelper.accessor("categoryName", {
+        header: "Category",
+        cell: ({ row }) => (
+          <Typography color="text.primary" className="font-medium">
+            {trimText(row.original.categoryName)}
+          </Typography>
+        ),
+      }),
+      columnHelper.accessor("userCount", {
+        header: "Registered Users Count",
+        cell: ({ row }) => (
+          <Typography color="text.primary" className="font-medium">
+            {/* {trimText(row.original.categoryName)} */} 5
+          </Typography>
+        ),
+      }),
       columnHelper.accessor("status", {
         header: "Status",
         cell: ({ row }) => (
@@ -357,7 +369,7 @@ const EventDetailListTable = () => {
           <div className="h-10 flex items-center">
             <div>
               <Typography variant="h5" className={`capitalize cursor-pointer`}>
-                &nbsp; Event Details &nbsp;
+                &nbsp; List of Events &nbsp;
               </Typography>
             </div>
           </div>
@@ -394,7 +406,7 @@ const EventDetailListTable = () => {
                 startIcon={<i className="tabler-plus" />}
                 onClick={() => router.push("/event-details/add")}
               >
-                Add Event
+                Add New Event
               </Button>
             </div>
             {/* <Button

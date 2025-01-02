@@ -172,7 +172,7 @@ export default function EventFilter({
             label="Status"
             placeholder="Select Company Status"
             value={filterValue?.status || ""}
-            onChange={(e) => handleFilterChange("status", e.target.value)}
+            onChange={(e) => handleFilterChange("status", [e.target.value])}
           >
             <MenuItem key={"Active"} value={"active"}>
               Active
@@ -180,7 +180,7 @@ export default function EventFilter({
             <MenuItem key={"Inactive"} value={"inactive"}>
               Inactive
             </MenuItem>
-            <MenuItem key={"Drafted"} value={"drafted"}>
+            <MenuItem key={"Drafted"} value={"Drafted"}>
               Drafted
             </MenuItem>
           </CustomTextField>
@@ -273,7 +273,7 @@ export default function EventFilter({
               disabled={isSaveDisabled}
               onClick={() => handleFilterSaveAndApply()}
             >
-              Save
+              Apply
             </Button>
             <Button
               variant="outlined"

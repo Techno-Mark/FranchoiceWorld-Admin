@@ -10,104 +10,6 @@ type PageProps = {
 
 function EventDetail({ eventDetails: data }: PageProps) {
   const router = useRouter();
-  const [countries, setCountries] = useState<Record<number, string>>({});
-  const [states, setStates] = useState<Record<number, string>>({});
-  const [cities, setCities] = useState<Record<number, string>>({});
-  const [categories, setCategories] = useState<Record<number, string>>({});
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [countriesRes, categoriesRes] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/dropdown/countries`),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/dropdown/categories`),
-        ]);
-
-        const countriesData = await countriesRes.json();
-        const categoriesData = await categoriesRes.json();
-
-        setCountries(
-          countriesData.ResponseData.reduce(
-            (
-              acc: Record<number, string>,
-              country: { id: number; name: string }
-            ) => {
-              acc[country.id] = country.name;
-              return acc;
-            },
-            {}
-          )
-        );
-
-        setCategories(
-          categoriesData.ResponseData.reduce(
-            (
-              acc: Record<number, string>,
-              category: { id: number; name: string }
-            ) => {
-              acc[category.id] = category.name;
-              return acc;
-            },
-            {}
-          )
-        );
-
-        if (data.country) {
-          const statesRes = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/dropdown/states`,
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ countryId: Number(data.country) }),
-            }
-          );
-          const statesData = await statesRes.json();
-
-          setStates(
-            statesData.ResponseData.reduce(
-              (
-                acc: Record<number, string>,
-                state: { id: number; name: string }
-              ) => {
-                acc[state.id] = state.name;
-                return acc;
-              },
-              {}
-            )
-          );
-        }
-
-        if (data.state) {
-          const citiesRes = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/dropdown/cities`,
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ stateId: Number(data.state) }),
-            }
-          );
-          const citiesData = await citiesRes.json();
-
-          setCities(
-            citiesData.ResponseData.reduce(
-              (
-                acc: Record<number, string>,
-                city: { id: number; name: string }
-              ) => {
-                acc[city.id] = city.name;
-                return acc;
-              },
-              {}
-            )
-          );
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-
-    fetchData();
-  }, [data.country, data.state]);
 
   return (
     <Grid container spacing={6} alignItems={"flex-start"}>
@@ -147,7 +49,7 @@ function EventDetail({ eventDetails: data }: PageProps) {
                   Event Category:{" "}
                 </Typography>
                 <Typography>
-                  {categories[data.eventCategory] || "NA"}
+                  {data.categoryName || "NA"}
                 </Typography>
               </div>
               <div className="flex items-center space-x-2">
@@ -162,21 +64,21 @@ function EventDetail({ eventDetails: data }: PageProps) {
                   {" "}
                   Country:{" "}
                 </Typography>
-                <Typography>{countries[data.country] || "NA"}</Typography>
+                <Typography>{data.countryName || "NA"}</Typography>
               </div>
               <div className="flex items-center space-x-2">
                 <Typography variant="h6" className="w-32">
                   {" "}
                   State:{" "}
                 </Typography>
-                <Typography>{states[data.state] || "NA"}</Typography>
+                <Typography>{data.stateName || "NA"}</Typography>
               </div>
               <div className="flex items-center space-x-2">
                 <Typography variant="h6" className="w-32">
                   {" "}
                   City:{" "}
                 </Typography>
-                <Typography>{cities[data.city] || "NA"}</Typography>
+                <Typography>{data.cityName || "NA"}</Typography>
               </div>
               <div className="flex items-center space-x-2">
                 <Typography variant="h6" className="w-32">

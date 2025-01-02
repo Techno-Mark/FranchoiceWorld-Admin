@@ -1,6 +1,6 @@
 "use client";
 
-import EditEventForm from "./BrandEditForm";
+import EditEventForm from "./EditEventForm";
 
 const Page = () => {
   return (
