@@ -128,6 +128,7 @@ function EditEventForm() {
   const [countryOptions, setCountryOptions] = useState([]);
   const [stateOptions, setStateOptions] = useState([]);
   const [cityOptions, setCityOptions] = useState([]);
+  const [thumbnailIndex, setThumbnailIndex] = useState<number>(-1);
 
   //Modal State
   const [isCancel, setIsCancel] = useState<boolean>(false);
@@ -154,7 +155,7 @@ function EditEventForm() {
         type: file.type,
         size: file.size,
         preview: URL.createObjectURL(file),
-        file: file,
+        file,
       }));
 
       const updatedFiles = [...currentFiles, ...newFiles];
@@ -189,7 +190,7 @@ function EditEventForm() {
     },
   });
 
-  const handleRemoveImage = (fileToRemove: FileProp) => {
+  const handleRemoveImage = (fileToRemove: FileProp, removedIndex: number) => {
     const updatedFiles = formik.values.eventImages.filter(
       (file) => file.name !== fileToRemove.name
     );
@@ -198,6 +199,12 @@ function EditEventForm() {
 
     if (fileToRemove.preview) {
       URL.revokeObjectURL(fileToRemove.preview);
+    }
+
+    if (thumbnailIndex === removedIndex) {
+      setThumbnailIndex(updatedFiles.length > 0 ? 0 : -1);
+    } else if (thumbnailIndex > removedIndex) {
+      setThumbnailIndex(thumbnailIndex - 1);
     }
   };
 
@@ -309,8 +316,13 @@ function EditEventForm() {
         return;
       }
 
-      const formDataObject = new FormData();
+      if (thumbnailIndex === -1) {
+        toast.error("Please select a thumbnail image");
+        return;
+      }
 
+      const formDataObject = new FormData();
+      formDataObject.append("isDefault", thumbnailIndex.toString());
       (Object.keys(values) as Array<keyof typeof values>).forEach((key) => {
         if (key !== "eventImages") {
           const value = values[key];
@@ -324,15 +336,20 @@ function EditEventForm() {
         }
       });
       values.eventImages.forEach((fileProp: FileProp) => {
+        console.log("🚀 ~ values.eventImages.forEach ~ fileProp.file:", fileProp.file)
         formDataObject.append("eventImages", fileProp.file);
       });
       formDataObject.append("eventId", String(eventId));
 
+      for (const [key, value] of formDataObject.entries()) {
+        console.log(`${key}:`, value);
+      }
+      
       try {
         setLoading(true);
-        const response = await postFormData(eventDetails.save, formDataObject);
-        toast.success(response.Message);
-        router.push("/event-details");
+        // const response = await postFormData(eventDetails.save, formDataObject);
+        // toast.success(response.Message);
+        // router.push("/event-details");
       } catch (error: any) {
         console.error("Error posting data:", error.message);
         toast.error(error.message || "Error submitting form");
@@ -354,15 +371,18 @@ function EditEventForm() {
       if (eventData.state) {
         await fetchCity(eventData.state);
       }
-
+      if(eventData.isDefault){
+        setThumbnailIndex(Number(eventData.isDefault))
+      }
+      
       const formattedImages =
-        eventData.eventImages?.map((imagePath: string) => ({
-          name: imagePath.split("/").pop(),
+        eventData.eventImages?.map((image: any) => ({
+          name: image.img.split("/").pop(),
           type: "image/jpeg",
           size: 0,
-          preview: imagePath.startsWith("/")
-            ? imagePath
-            : `${API_URL?.replace("/api", "")}${imagePath.startsWith("api/") ? imagePath.replace("api/", "") : `/${imagePath}`}`,
+          preview: image.img.startsWith("/")
+            ? image.img
+            : `${API_URL?.replace("/api", "")}${image.img.startsWith("api/") ? image.img.replace("api/", "") : `/${image.img}`}`,
         })) || [];
 
       // Set form values
@@ -567,7 +587,7 @@ function EditEventForm() {
                     type="date"
                     fullWidth
                     inputProps={{
-                      min: new Date().toISOString().split('T')[0]
+                      min: new Date().toISOString().split("T")[0],
                     }}
                     error={
                       formik.touched.startDate &&
@@ -586,7 +606,7 @@ function EditEventForm() {
                     type="date"
                     fullWidth
                     inputProps={{
-                      min: new Date().toISOString().split('T')[0]
+                      min: new Date().toISOString().split("T")[0],
                     }}
                     error={
                       formik.touched.endDate && Boolean(formik.errors.endDate)
@@ -668,11 +688,16 @@ function EditEventForm() {
               <Grid container spacing={2} className="mt-5">
                 <Grid item xs={12} sm={6} className="mt-3">
                   <div {...getRootProps({ className: "dropzone" })}>
-                  <Typography variant="h6" className={`${
+                    <Typography
+                      variant="h6"
+                      className={`${
                         formik.touched.eventImages && formik.errors.eventImages
                           ? "text-red-500"
                           : ""
-                      }`}>Add Images *</Typography>
+                      }`}
+                    >
+                      Add Images *
+                    </Typography>
                     <input {...getInputProps()} />
                     <div
                       className={`flex items-center flex-col w-[450px] h-[200px] p-2 border-dashed border-2 ${
@@ -698,23 +723,42 @@ function EditEventForm() {
                     </Typography>
                   )}
                   <div className="images-preview flex flex-col gap-y-2 mt-4">
-                    {formik.values.eventImages.map((file: FileProp) => (
-                      <div
-                        key={file.name}
-                        className="file-details flex justify-between items-center w-[450px] p-2 border rounded"
-                      >
-                        {renderFilePreview(file)}
-                        <Typography className="file-name p-3">
-                          {file.name}
-                        </Typography>
-                        <IconButton
-                          onClick={() => handleRemoveImage(file)}
-                          size="small"
+                    {formik.values.eventImages.map(
+                      (file: FileProp, index: number) => (
+                        <div
+                          key={file.name}
+                          className="file-details flex justify-between items-center w-[450px] p-2 border rounded"
                         >
-                          <i className="tabler-x text-xl" />
-                        </IconButton>
-                      </div>
-                    ))}
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="radio"
+                              name="thumbnail"
+                              value={index}
+                              checked={thumbnailIndex === index}
+                              onChange={(e) =>
+                                setThumbnailIndex(Number(e.target.value))
+                              }
+                              className="cursor-pointer w-5 h-5"
+                            />
+                            {renderFilePreview(file)}
+                          </div>
+                          <Typography className="file-name p-3">
+                            {file.name}
+                            {thumbnailIndex === index && (
+                              <span className="text-blue-500 ml-2">
+                                (Thumbnail)
+                              </span>
+                            )}
+                          </Typography>
+                          <IconButton
+                            onClick={() => handleRemoveImage(file, index)}
+                            size="small"
+                          >
+                            <i className="tabler-x text-xl" />
+                          </IconButton>
+                        </div>
+                      )
+                    )}
                   </div>
                 </Grid>
               </Grid>

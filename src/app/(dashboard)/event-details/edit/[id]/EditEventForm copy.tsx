@@ -14,10 +14,10 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import ConfirmationDialog from "./ConfirmationDialog";
 // Icon Imports
-import { postFormData } from "@/services/apiService";
+import { post, postFormData } from "@/services/apiService";
 import { eventDetails } from "@/services/endpoint/event-details";
 import { FormikHelpers, useFormik } from "formik";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useDropzone } from "react-dropzone";
 import * as Yup from "yup";
 import {
@@ -26,7 +26,6 @@ import {
   getCountry,
   getState,
 } from "./dropdownAPIService";
-import { boolean } from "valibot";
 
 type FileProp = {
   name: string;
@@ -50,6 +49,7 @@ interface FormData {
   startTime: string;
   endTime: string;
   contactInfo: string;
+  status: string;
   eventImages: FileProp[];
 }
 
@@ -67,18 +67,15 @@ const initialValues: FormData = {
   startTime: "",
   endTime: "",
   contactInfo: "",
+  status: "Publish",
   eventImages: [],
 };
 
 const validationSchema = Yup.object({
   eventName: Yup.string().required("Event Name is required"),
-  eventDescription: Yup.string()
-    .required("Event Description is required")
-    .max(500, "Event Description must not exceed 500 characters"),
+  eventDescription: Yup.string().required("Event Description is required"),
   eventCategory: Yup.string().required("Event Category is required"),
-  location: Yup.string()
-    .required("Location is required")
-    .max(250, "Location must not exceed 250 characters"),
+  location: Yup.string().required("Location is required"),
   country: Yup.string().required("Country is required"),
   state: Yup.string().required("State is required"),
   city: Yup.string().required("City is required"),
@@ -86,10 +83,7 @@ const validationSchema = Yup.object({
   endDate: Yup.date().required("End Date is required"),
   startTime: Yup.string().required("Start Time is required"),
   endTime: Yup.string().required("End Time is required"),
-  // status: Yup.string().required("Status is required"),
-  contactInfo: Yup.string()
-    .required("Contact Info is required")
-    .max(50, "Contact Info must not exceed 50 characters"),
+  status: Yup.string().required("Status is required"),
   eventImages: Yup.array()
     .min(1, "At least one image is required")
     .max(5, "Maximum 5 images allowed")
@@ -122,17 +116,18 @@ const validationSchema = Yup.object({
     .required("At least one image is required"),
 });
 
-function AddEventForm() {
+function EditEventForm() {
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
   const router = useRouter();
+  const params = useParams();
+  const eventId = params.id;
   const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState<string>("");
 
   //dropdown
   const [categoriesOptions, setCategoriesOptions] = useState([]);
   const [countryOptions, setCountryOptions] = useState([]);
   const [stateOptions, setStateOptions] = useState([]);
   const [cityOptions, setCityOptions] = useState([]);
-  const [thumbnailIndex, setThumbnailIndex] = useState<number>(-1);
 
   //Modal State
   const [isCancel, setIsCancel] = useState<boolean>(false);
@@ -150,7 +145,7 @@ function AddEventForm() {
       const currentFiles = formik.values.eventImages;
 
       if (currentFiles.length + acceptedFiles.length > 5) {
-        toast.error("Maximum 5 images are allowed");
+        toast.error("Maximum 5 images allowed");
         return;
       }
 
@@ -180,28 +175,21 @@ function AddEventForm() {
       formik.setFieldTouched("eventImages", true, false);
     },
     onDropRejected: (fileRejections) => {
-      const errorMessages = new Set();
-
-      fileRejections.forEach((rejection) => {
-        rejection.errors.forEach((error) => {
-          if (error.code === "too-many-files") {
-            errorMessages.add("Maximum 5 images are allowed");
-          } else if (error.code === "file-too-large") {
-            errorMessages.add(
-              "File is too large. Size limit is 2MB for single image or 10MB total for multiple images"
-            );
-          } else {
-            errorMessages.add(error.message);
-          }
-        });
-      });
-
-      const errorMessage = Array.from(errorMessages).join(". ");
-      toast.error(errorMessage, { autoClose: 3000 });
+      const errors = fileRejections
+        .map((rejection) =>
+          rejection.errors.map((error) => {
+            if (error.code === "file-too-large") {
+              return "File is too large. Size limit is 2MB for single image or 10MB total for multiple images";
+            }
+            return error.message;
+          })
+        )
+        .flat();
+      toast.error(errors.join(", "), { autoClose: 3000 });
     },
   });
 
-  const handleRemoveImage = (fileToRemove: FileProp, removedIndex: number) => {
+  const handleRemoveImage = (fileToRemove: FileProp) => {
     const updatedFiles = formik.values.eventImages.filter(
       (file) => file.name !== fileToRemove.name
     );
@@ -211,18 +199,30 @@ function AddEventForm() {
     if (fileToRemove.preview) {
       URL.revokeObjectURL(fileToRemove.preview);
     }
-
-    if (thumbnailIndex === removedIndex) {
-      setThumbnailIndex(updatedFiles.length > 0 ? 0 : -1);
-    } else if (thumbnailIndex > removedIndex) {
-      setThumbnailIndex(thumbnailIndex - 1);
-    }
   };
 
   const renderFilePreview = (file: FileProp) => {
-    if (file.type.startsWith("image/")) {
+    if (file.type?.startsWith("image/") || typeof file.name === "string") {
+      const imageSrc =
+        file.preview ||
+        (file.name.startsWith("/") ? file.name : `${API_URL}/${file.name}`);
+
       return (
-        <img width={100} height={100} alt={file.name} src={file.preview} />
+        <img
+          width={100}
+          height={100}
+          alt={file.name.split("/").pop() || "Event image"}
+          src={imageSrc}
+          style={{
+            objectFit: "cover",
+            borderRadius: "4px",
+            padding: "5px",
+          }}
+          onError={(e) => {
+            console.error(`Error loading preview for ${file.name}`);
+            e.currentTarget.src = "/placeholder-image.png";
+          }}
+        />
       );
     }
     return null;
@@ -288,18 +288,6 @@ function AddEventForm() {
   };
 
   useEffect(() => {
-    fetchCountries();
-    fetchCategories();
-    return () => {
-      formik.values.eventImages.forEach((file) => {
-        if (file.preview) {
-          URL.revokeObjectURL(file.preview);
-        }
-      });
-    };
-  }, []);
-
-  useEffect(() => {
     formik.validateField("eventImages");
   }, []);
 
@@ -312,56 +300,109 @@ function AddEventForm() {
     validationSchema,
     validateOnMount: false,
     validateOnChange: true,
-    onSubmit: async () => {
-      await handleSave();
+    onSubmit: async (
+      values: FormData,
+      { setFieldTouched }: FormikHelpers<FormData>
+    ) => {
+      if (values.eventImages.length === 0) {
+        toast.error("At least one image is required");
+        return;
+      }
+
+      const formDataObject = new FormData();
+
+      (Object.keys(values) as Array<keyof typeof values>).forEach((key) => {
+        if (key !== "eventImages") {
+          const value = values[key];
+          if (value === null) {
+            formDataObject.append(key, "");
+          } else if (value instanceof Date) {
+            formDataObject.append(key, value.toISOString());
+          } else {
+            formDataObject.append(key, String(value));
+          }
+        }
+      });
+      values.eventImages.forEach((fileProp: FileProp) => {
+        formDataObject.append("eventImages", fileProp.file);
+      });
+      formDataObject.append("eventId", String(eventId));
+
+      try {
+        setLoading(true);
+        const response = await postFormData(eventDetails.save, formDataObject);
+        toast.success(response.Message);
+        router.push("/event-details");
+      } catch (error: any) {
+        console.error("Error posting data:", error.message);
+        toast.error(error.message || "Error submitting form");
+      } finally {
+        setLoading(false);
+      }
     },
   });
 
-  const handleSave = async () => {
-    if (formik.values.eventImages.length === 0) {
-      toast.error("At least one image is required");
-      return;
-    }
-
-    if (thumbnailIndex === -1) {
-      toast.error("Please select a thumbnail image");
-      return;
-    }
-
+  const fetchEventDetails = async () => {
     try {
-      setLoading(true);
-      const formDataObject = new FormData();
+      const response = await post(eventDetails.getById, { eventId: eventId });
+      const eventData = response.ResponseData;
 
-      formDataObject.append("status", status);
-      formDataObject.append("isDefault", thumbnailIndex.toString());
-      (Object.keys(formik.values) as Array<keyof typeof formik.values>).forEach(
-        (key) => {
-          if (key !== "eventImages") {
-            const value = formik.values[key];
-            if (value === null) {
-              formDataObject.append(key, "");
-            } else if (value instanceof Date) {
-              formDataObject.append(key, value.toISOString());
-            } else {
-              formDataObject.append(key, String(value));
-            }
-          }
-        }
-      );
+      // Fetch dependent dropdowns data based on event data
+      if (eventData.country) {
+        await fetchStates(eventData.country);
+      }
+      if (eventData.state) {
+        await fetchCity(eventData.state);
+      }
 
-      formik.values.eventImages.forEach((fileProp: FileProp) => {
-        formDataObject.append("eventImages", fileProp.file);
+      const formattedImages =
+        eventData.eventImages?.map((imagePath: string) => ({
+          name: imagePath.split("/").pop(),
+          type: "image/jpeg",
+          size: 0,
+          preview: imagePath.startsWith("/")
+            ? imagePath
+            : `${API_URL?.replace("/api", "")}${imagePath.startsWith("api/") ? imagePath.replace("api/", "") : `/${imagePath}`}`,
+        })) || [];
+
+      // Set form values
+      formik.setValues({
+        eventId: eventData.id,
+        eventName: eventData.eventName || "",
+        eventDescription: eventData.eventDescription || "",
+        eventCategory: eventData.eventCategory || "",
+        location: eventData.location || "",
+        country: eventData.country || "",
+        state: eventData.state || "",
+        city: eventData.city || "",
+        startDate: eventData.startDate || null,
+        endDate: eventData.endDate || null,
+        startTime: eventData.startTime || "",
+        endTime: eventData.endTime || "",
+        contactInfo: eventData.contactInfo || "",
+        status: eventData.status || "Publish",
+        eventImages: formattedImages,
       });
-
-      const response = await postFormData(eventDetails.save, formDataObject);
-      toast.success(response.Message);
-      router.push("/event-details");
-    } catch (error: any) {
-      console.error("Error posting data:", error.message);
+    } catch (error) {
+      console.error("Error fetching event details:", error);
+      toast.error("Error loading event details");
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchEventDetails();
+    fetchCountries();
+    fetchCategories();
+    return () => {
+      formik.values.eventImages.forEach((file) => {
+        if (file.preview) {
+          URL.revokeObjectURL(file.preview);
+        }
+      });
+    };
+  }, [eventId]);
 
   if (loading) {
     return <LoadingBackdrop isLoading={loading} />;
@@ -375,7 +416,7 @@ function AddEventForm() {
           <Grid item xs={12}>
             <div className="h-10 flex items-center mb-2">
               <Typography variant="h5" className="capitalize">
-                &nbsp; Event Add Page &nbsp;
+                &nbsp; Event Edit Page &nbsp;
               </Typography>
             </div>
           </Grid>
@@ -526,7 +567,7 @@ function AddEventForm() {
                     type="date"
                     fullWidth
                     inputProps={{
-                      min: new Date().toISOString().split("T")[0],
+                      min: new Date().toISOString().split('T')[0]
                     }}
                     error={
                       formik.touched.startDate &&
@@ -545,7 +586,7 @@ function AddEventForm() {
                     type="date"
                     fullWidth
                     inputProps={{
-                      min: new Date().toISOString().split("T")[0],
+                      min: new Date().toISOString().split('T')[0]
                     }}
                     error={
                       formik.touched.endDate && Boolean(formik.errors.endDate)
@@ -586,20 +627,13 @@ function AddEventForm() {
 
                 <Grid item xs={12} sm={6}>
                   <CustomTextField
-                    label="Contact Info *"
+                    label="Contact Info"
                     fullWidth
-                    error={
-                      formik.touched.contactInfo &&
-                      Boolean(formik.errors.contactInfo)
-                    }
-                    helperText={
-                      formik.touched.contactInfo && formik.errors.contactInfo
-                    }
                     {...formik.getFieldProps("contactInfo")}
                   />
                 </Grid>
 
-                {/* <Grid item xs={12} sm={6}>
+                <Grid item xs={12} sm={6}>
                   <CustomTextField
                     label="Status *"
                     select
@@ -620,7 +654,7 @@ function AddEventForm() {
                       Drafted
                     </MenuItem>
                   </CustomTextField>
-                </Grid> */}
+                </Grid>
               </Grid>
             </Card>
           </Grid>
@@ -634,16 +668,11 @@ function AddEventForm() {
               <Grid container spacing={2} className="mt-5">
                 <Grid item xs={12} sm={6} className="mt-3">
                   <div {...getRootProps({ className: "dropzone" })}>
-                    <Typography
-                      variant="h6"
-                      className={`${
+                  <Typography variant="h6" className={`${
                         formik.touched.eventImages && formik.errors.eventImages
                           ? "text-red-500"
                           : ""
-                      }`}
-                    >
-                      Add Images *
-                    </Typography>
+                      }`}>Add Images *</Typography>
                     <input {...getInputProps()} />
                     <div
                       className={`flex items-center flex-col w-[450px] h-[200px] p-2 border-dashed border-2 ${
@@ -669,42 +698,23 @@ function AddEventForm() {
                     </Typography>
                   )}
                   <div className="images-preview flex flex-col gap-y-2 mt-4">
-                    {formik.values.eventImages.map(
-                      (file: FileProp, index: number) => (
-                        <div
-                          key={file.name}
-                          className="file-details flex justify-between items-center w-[450px] p-2 border rounded"
+                    {formik.values.eventImages.map((file: FileProp) => (
+                      <div
+                        key={file.name}
+                        className="file-details flex justify-between items-center w-[450px] p-2 border rounded"
+                      >
+                        {renderFilePreview(file)}
+                        <Typography className="file-name p-3">
+                          {file.name}
+                        </Typography>
+                        <IconButton
+                          onClick={() => handleRemoveImage(file)}
+                          size="small"
                         >
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="radio"
-                              name="thumbnail"
-                              value={index}
-                              checked={thumbnailIndex === index}
-                              onChange={(e) =>
-                                setThumbnailIndex(Number(e.target.value))
-                              }
-                              className="cursor-pointer w-5 h-5"
-                            />
-                            {renderFilePreview(file)}
-                          </div>
-                          <Typography className="file-name">
-                            {file.name}
-                            {thumbnailIndex === index && (
-                              <span className="text-blue-500 ml-2">
-                                (Thumbnail)
-                              </span>
-                            )}
-                          </Typography>
-                          <IconButton
-                            onClick={() => handleRemoveImage(file, index)}
-                            size="small"
-                          >
-                            <i className="tabler-x text-xl" />
-                          </IconButton>
-                        </div>
-                      )
-                    )}
+                          <i className="tabler-x text-xl" />
+                        </IconButton>
+                      </div>
+                    ))}
                   </div>
                 </Grid>
               </Grid>
@@ -730,24 +740,8 @@ function AddEventForm() {
               >
                 Cancel
               </Button>
-              <Button
-                variant="outlined"
-                color="primary"
-                onClick={() => {
-                  setStatus("Drafted");
-                  formik.handleSubmit();
-                }}
-              >
-                Save as Draft
-              </Button>
-              <Button
-                variant="contained"
-                onClick={() => {
-                  setStatus("Active");
-                  formik.handleSubmit();
-                }}
-              >
-                Add
+              <Button variant="contained" type="submit">
+                Update
               </Button>
             </Box>
           </Grid>
@@ -764,4 +758,4 @@ function AddEventForm() {
   );
 }
 
-export default AddEventForm;
+export default EditEventForm;

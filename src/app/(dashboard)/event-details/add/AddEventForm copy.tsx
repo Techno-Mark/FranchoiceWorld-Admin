@@ -132,7 +132,7 @@ function AddEventForm() {
   const [countryOptions, setCountryOptions] = useState([]);
   const [stateOptions, setStateOptions] = useState([]);
   const [cityOptions, setCityOptions] = useState([]);
-  const [thumbnailIndex, setThumbnailIndex] = useState<number>(-1);
+  const [thumbnailImage, setThumbnailImage] = useState<string>('');
 
   //Modal State
   const [isCancel, setIsCancel] = useState<boolean>(false);
@@ -201,7 +201,7 @@ function AddEventForm() {
     },
   });
 
-  const handleRemoveImage = (fileToRemove: FileProp, removedIndex: number) => {
+  const handleRemoveImage = (fileToRemove: FileProp) => {
     const updatedFiles = formik.values.eventImages.filter(
       (file) => file.name !== fileToRemove.name
     );
@@ -212,10 +212,8 @@ function AddEventForm() {
       URL.revokeObjectURL(fileToRemove.preview);
     }
 
-    if (thumbnailIndex === removedIndex) {
-      setThumbnailIndex(updatedFiles.length > 0 ? 0 : -1);
-    } else if (thumbnailIndex > removedIndex) {
-      setThumbnailIndex(thumbnailIndex - 1);
+    if (thumbnailImage === fileToRemove.name) {
+      setThumbnailImage('');
     }
   };
 
@@ -323,17 +321,11 @@ function AddEventForm() {
       return;
     }
 
-    if (thumbnailIndex === -1) {
-      toast.error("Please select a thumbnail image");
-      return;
-    }
-
     try {
       setLoading(true);
       const formDataObject = new FormData();
 
       formDataObject.append("status", status);
-      formDataObject.append("isDefault", thumbnailIndex.toString());
       (Object.keys(formik.values) as Array<keyof typeof formik.values>).forEach(
         (key) => {
           if (key !== "eventImages") {
@@ -669,42 +661,37 @@ function AddEventForm() {
                     </Typography>
                   )}
                   <div className="images-preview flex flex-col gap-y-2 mt-4">
-                    {formik.values.eventImages.map(
-                      (file: FileProp, index: number) => (
-                        <div
-                          key={file.name}
-                          className="file-details flex justify-between items-center w-[450px] p-2 border rounded"
-                        >
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="radio"
-                              name="thumbnail"
-                              value={index}
-                              checked={thumbnailIndex === index}
-                              onChange={(e) =>
-                                setThumbnailIndex(Number(e.target.value))
-                              }
-                              className="cursor-pointer w-5 h-5"
-                            />
-                            {renderFilePreview(file)}
-                          </div>
-                          <Typography className="file-name">
-                            {file.name}
-                            {thumbnailIndex === index && (
-                              <span className="text-blue-500 ml-2">
-                                (Thumbnail)
-                              </span>
-                            )}
-                          </Typography>
-                          <IconButton
-                            onClick={() => handleRemoveImage(file, index)}
-                            size="small"
-                          >
-                            <i className="tabler-x text-xl" />
-                          </IconButton>
+                    {formik.values.eventImages.map((file: FileProp) => (
+                      <div
+                        key={file.name}
+                        className="file-details flex justify-between items-center w-[450px] p-2 border rounded"
+                      >
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="radio"
+                            name="thumbnail"
+                            value={file.name}
+                            checked={thumbnailImage === file.name}
+                            onChange={(e) => setThumbnailImage(e.target.value)}
+                          />
+                          {renderFilePreview(file)}
                         </div>
-                      )
-                    )}
+                        <Typography className="file-name">
+                          {file.name}
+                          {thumbnailImage === file.name && (
+                            <span className="text-blue-500 ml-2">
+                              (Thumbnail)
+                            </span>
+                          )}
+                        </Typography>
+                        <IconButton
+                          onClick={() => handleRemoveImage(file)}
+                          size="small"
+                        >
+                          <i className="tabler-x text-xl" />
+                        </IconButton>
+                      </div>
+                    ))}
                   </div>
                 </Grid>
               </Grid>
