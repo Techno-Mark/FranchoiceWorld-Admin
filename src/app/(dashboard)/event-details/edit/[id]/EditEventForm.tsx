@@ -336,20 +336,15 @@ function EditEventForm() {
         }
       });
       values.eventImages.forEach((fileProp: FileProp) => {
-        console.log("🚀 ~ values.eventImages.forEach ~ fileProp.file:", fileProp.file)
         formDataObject.append("eventImages", fileProp.file);
       });
       formDataObject.append("eventId", String(eventId));
-
-      for (const [key, value] of formDataObject.entries()) {
-        console.log(`${key}:`, value);
-      }
-      
+    
       try {
         setLoading(true);
-        // const response = await postFormData(eventDetails.save, formDataObject);
-        // toast.success(response.Message);
-        // router.push("/event-details");
+        const response = await postFormData(eventDetails.save, formDataObject);
+        toast.success(response.Message);
+        router.push("/event-details");
       } catch (error: any) {
         console.error("Error posting data:", error.message);
         toast.error(error.message || "Error submitting form");
@@ -359,33 +354,68 @@ function EditEventForm() {
     },
   });
 
+  const convertUrlToFile = async (
+    url: string,
+    fileName: string
+  ): Promise<File> => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+
+      return new File([blob], fileName, {
+        type: blob.type || "image/jpeg",
+        lastModified: new Date().getTime(),
+      });
+    } catch (error) {
+      console.error("Error converting URL to File:", error);
+      throw error;
+    }
+  };
+
   const fetchEventDetails = async () => {
     try {
       const response = await post(eventDetails.getById, { eventId: eventId });
       const eventData = response.ResponseData;
 
-      // Fetch dependent dropdowns data based on event data
       if (eventData.country) {
         await fetchStates(eventData.country);
       }
       if (eventData.state) {
         await fetchCity(eventData.state);
       }
-      if(eventData.isDefault){
-        setThumbnailIndex(Number(eventData.isDefault))
+      if (eventData.isDefault) {
+        setThumbnailIndex(Number(eventData.isDefault));
       }
-      
-      const formattedImages =
-        eventData.eventImages?.map((image: any) => ({
-          name: image.img.split("/").pop(),
-          type: "image/jpeg",
-          size: 0,
-          preview: image.img.startsWith("/")
-            ? image.img
-            : `${API_URL?.replace("/api", "")}${image.img.startsWith("api/") ? image.img.replace("api/", "") : `/${image.img}`}`,
-        })) || [];
 
-      // Set form values
+      const imagePromises =
+        eventData.eventImages?.map(async (image: any) => {
+          const fileName = image.img.split("/").pop() || "";
+          const imagePath = image.img.startsWith("/")
+            ? image.img
+            : `${API_URL?.replace("/api", "")}${
+                image.img.startsWith("api/")
+                  ? image.img.replace("api/", "")
+                  : `/${image.img}`
+              }`;
+
+          try {
+            const file = await convertUrlToFile(imagePath, fileName);
+
+            return {
+              name: fileName,
+              type: file.type,
+              size: file.size,
+              preview: imagePath,
+              file: file,
+            };
+          } catch (error) {
+            console.error(`Error processing image ${fileName}:`, error);
+            throw error;
+          }
+        }) || [];
+
+      const formattedImages = await Promise.all(imagePromises);
+
       formik.setValues({
         eventId: eventData.id,
         eventName: eventData.eventName || "",
